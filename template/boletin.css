@@ -72,6 +72,11 @@ html, body {
   position: relative;
   background: #ffffff;
   overflow: hidden;
+  page-break-after: always;
+}
+
+.page:last-child {
+  page-break-after: auto;
 }
 
 .header-banner {
@@ -240,6 +245,13 @@ html, body {
   font-size: 8pt;
   line-height: 1.1;
   color: #000000;
+}
+
+.footer-notes {
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #000000;
+  margin-bottom: 8pt;
 }
 
 .footer-contact {
