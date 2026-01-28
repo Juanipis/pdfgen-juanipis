@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+</head>
+<body>
+  {% macro render_table(table) %}
+    {% set total_width = table.total_width or 532.66 %}
+    {% set dep_width = table.dep_width or 120.0 %}
+    {% set ns = namespace(num_cols=0) %}
+    {% for g in table.groups %}
+      {% set ns.num_cols = ns.num_cols + (g.months | length) %}
+    {% endfor %}
+    {% set num_cols = ns.num_cols %}
+    {% set num_width = (total_width - dep_width) / (num_cols if num_cols else 1) %}
+    <div class="table-wrap">
+      <table class="tabla-abaco">
+        <colgroup>
+          <col style="width: {{ '%.2f' % dep_width }}pt;">
+          {% for _ in range(num_cols) %}
+          <col style="width: {{ '%.2f' % num_width }}pt;">
+          {% endfor %}
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-dep" rowspan="2">Departamento/Mes</th>
+            {% for g in table.groups %}
+            <th class="col-num" colspan="{{ g.months | length }}">{{ g.title }}</th>
+            {% endfor %}
+          </tr>
+          <tr>
+            {% for g in table.groups %}
+              {% for month in g.months %}
+              <th class="col-num">{{ month }}</th>
+              {% endfor %}
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table.rows %}
+          <tr>
+            <td class="col-dep">{{ row.dep }}</td>
+            {% for val in row.vals %}
+            <td>{{ val }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endmacro %}
+
+  {% for page in pages %}
+  <div class="page">
+    <img class="header-banner" src="{{ page.header_banner_path }}" alt="Banner" />
+    <img class="header-logo" src="{{ page.header_logo_path }}" alt="Logo" />
+
+    <div class="header-title">{{ page.title_line1 }}</div>
+    <div class="header-subtitle">{{ page.title_line2 }}</div>
+
+    <div class="intro">{{ page.intro }}</div>
+
+    <div class="content">
+      {% for block in page.blocks %}
+        {% if block.type == "html" %}
+          {{ block.html | safe }}
+        {% elif block.type == "table" %}
+          {{ render_table(block.table) }}
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if page.refs %}
+    <div class="refs">
+      <div class="refs-line"></div>
+      {% for ref in page.refs %}
+      <div class="refs-text">{{ ref }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if page.footer_notes %}
+    <div class="footer-notes">
+      {% for note in page.footer_notes %}
+      <div>{{ note }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if page.page_number %}
+    <div class="footer-page">{{ page.page_number }}</div>
+    {% endif %}
+
+    <div class="footer-contact">
+      <div>{{ page.footer_site }}</div>
+      <div>{{ page.footer_phone }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</body>
+</html>

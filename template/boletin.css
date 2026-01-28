@@ -1,0 +1,264 @@
+@page {
+  size: Letter;
+  margin: 0;
+}
+
+:root {
+  --blue-title: #2e5395;
+  --orange-footer: #f58534;
+  --text: #000000;
+}
+
+@font-face {
+  font-family: 'Calibri';
+  src: url('../assets/fonts/BCDEEE_Calibri_5.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Calibri';
+  src: url('../assets/fonts/BCDHEE_Calibri-Bold_20.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Calibri';
+  src: url('../assets/fonts/BCDKEE_Calibri-Italic_33.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Century Gothic';
+  src: url('../assets/fonts/BCDFEE_CenturyGothic-Bold_9.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Times New Roman';
+  src: url('../assets/fonts/TimesNewRomanPS-BoldMT_38.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aptos Narrow';
+  src: url('../assets/fonts/BCEAEE_Aptos Narrow_149.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aptos Narrow';
+  src: url('../assets/fonts/BCDOEE_Aptos Narrow,Bold_142.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Calibri', sans-serif;
+  font-size: 12pt;
+  color: var(--text);
+}
+
+.page {
+  width: 8.5in;
+  height: 11in;
+  position: relative;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.header-banner {
+  position: absolute;
+  top: 0;
+  left: 0.35pt;
+  width: 817.5pt;
+  height: 79.5pt;
+  object-fit: cover;
+}
+
+.header-logo {
+  position: absolute;
+  top: 13.95pt;
+  left: 498.25pt;
+  width: 81.41pt;
+  height: 36.75pt;
+}
+
+.header-title {
+  position: absolute;
+  top: 73.7pt;
+  left: 94.7pt;
+  width: 430pt;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--blue-title);
+  line-height: 1.05;
+}
+
+.header-subtitle {
+  position: absolute;
+  top: 90.77pt;
+  left: 260.8pt;
+  width: 220pt;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--blue-title);
+  line-height: 1.05;
+}
+
+.intro {
+  position: absolute;
+  top: 122.18pt;
+  left: 85.1pt;
+  width: 444pt;
+  font-size: 12pt;
+  line-height: 1.0;
+}
+
+.content {
+  position: absolute;
+  top: 150pt;
+  left: 85.1pt;
+  width: 444pt;
+  font-size: 12pt;
+  line-height: 1.1;
+}
+
+.content .section-title {
+  margin: 0 0 6pt 0;
+  font-family: 'Calibri', sans-serif;
+  font-size: 14.04pt;
+  font-weight: 700;
+  color: #000000;
+}
+
+.content .section-title .roman {
+  display: inline-block;
+  width: 32pt;
+}
+
+.content .section-subtitle {
+  margin: 10pt 0 12pt 0;
+  font-family: 'Calibri', sans-serif;
+  font-size: 14.04pt;
+  font-weight: 400;
+  color: var(--blue-title);
+  text-align: center;
+}
+
+.content .section-title-serif {
+  margin: 12pt 0 8pt 0;
+  font-family: 'Times New Roman', serif;
+  font-size: 14.04pt;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+}
+
+.content p {
+  margin: 0 0 6pt 0;
+  font-size: 12pt;
+}
+
+.tabla-abaco {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: 'Aptos Narrow', sans-serif;
+  font-size: 11.04pt;
+  color: #000000;
+  margin: 6pt 0 10pt 0;
+  width: 532.66pt;
+}
+
+.tabla-abaco th,
+.tabla-abaco td {
+  border: 0.6pt solid #000000;
+  padding: 2pt 4pt;
+  line-height: 1.0;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.tabla-abaco thead th {
+  background: #d9d9d9;
+  font-weight: 700;
+  white-space: normal;
+}
+
+.tabla-abaco .col-dep {
+  text-align: left;
+  width: 120pt;
+}
+
+.tabla-abaco .col-num {
+  width: 58pt;
+}
+
+.table-wrap {
+  width: 532.66pt;
+  margin-left: -45.38pt;
+}
+
+.tabla-lg { width: 532.66pt; }
+.tabla-md { width: 532.66pt; }
+.tabla-sm { width: 532.66pt; }
+
+.footer-notes {
+  position: absolute;
+  left: 85.1pt;
+  right: 85.1pt;
+  bottom: 70pt;
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #000000;
+}
+
+.refs {
+  position: absolute;
+  left: 85.1pt;
+  right: 85.1pt;
+  bottom: 70pt;
+}
+
+.refs-line {
+  width: 120pt;
+  border-top: 0.6pt solid #000000;
+  margin-bottom: 4pt;
+}
+
+.refs-text {
+  font-family: 'Calibri', sans-serif;
+  font-style: italic;
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #000000;
+}
+
+.footer-contact {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 32pt;
+  text-align: center;
+  font-family: 'Century Gothic', sans-serif;
+  font-weight: 700;
+  font-size: 11.04pt;
+  color: var(--orange-footer);
+  line-height: 1.0;
+}
+
+.footer-page {
+  position: absolute;
+  left: 85.1pt;
+  bottom: 134pt;
+  font-size: 6.5pt;
+  color: #000000;
+}
