@@ -101,10 +101,11 @@ html, body {
   top: 73.7pt;
   left: 94.7pt;
   width: 430pt;
+  font-family: 'Calibri', sans-serif;
   font-size: 14pt;
   font-weight: 700;
   color: var(--blue-title);
-  line-height: 1.05;
+  line-height: 1.15;
 }
 
 .header-subtitle {
@@ -112,10 +113,11 @@ html, body {
   top: 90.77pt;
   left: 260.8pt;
   width: 220pt;
+  font-family: 'Calibri', sans-serif;
   font-size: 14pt;
   font-weight: 700;
   color: var(--blue-title);
-  line-height: 1.05;
+  line-height: 1.15;
 }
 
 .intro {
@@ -134,6 +136,11 @@ html, body {
   width: 444pt;
   font-size: 12pt;
   line-height: 1.1;
+}
+
+.content-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .content .section-title {
@@ -216,21 +223,15 @@ html, body {
 .tabla-md { width: 532.66pt; }
 .tabla-sm { width: 532.66pt; }
 
-.footer-notes {
+.footer-meta {
   position: absolute;
   left: 85.1pt;
   right: 85.1pt;
   bottom: 70pt;
-  font-size: 8pt;
-  line-height: 1.1;
-  color: #000000;
 }
 
 .refs {
-  position: absolute;
-  left: 85.1pt;
-  right: 85.1pt;
-  bottom: 70pt;
+  margin-bottom: 8pt;
 }
 
 .refs-line {
@@ -251,7 +252,6 @@ html, body {
   font-size: 8pt;
   line-height: 1.1;
   color: #000000;
-  margin-bottom: 8pt;
 }
 
 .footer-contact {

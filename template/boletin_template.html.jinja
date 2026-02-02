@@ -56,38 +56,46 @@
 
   {% for page in pages %}
   <div class="page">
-    <img class="header-banner" src="{{ page.header_banner_path }}" alt="Banner" />
+    <img class="header-banner" src="{{ page.header_banner_path_cont if not page.show_header_titles and page.header_banner_path_cont is defined else page.header_banner_path }}" alt="Banner" />
     <img class="header-logo" src="{{ page.header_logo_path }}" alt="Logo" />
 
-    <div class="header-title">{{ page.title_line1 }}</div>
-    <div class="header-subtitle">{{ page.title_line2 }}</div>
+    {% if page.show_header_titles %}
+    <div class="header-title" style="top: {{ page.header_title_top | default(73.7) }}pt; left: {{ page.header_title_left | default(94.7) }}pt; width: {{ page.header_title_width | default(430) }}pt; text-align: {{ page.header_title_align | default('left') }};">{{ page.title_line1 }}</div>
+    <div class="header-subtitle" style="top: {{ page.header_subtitle_top | default(90.77) }}pt; left: {{ page.header_subtitle_left | default(260.8) }}pt; width: {{ page.header_subtitle_width | default(220) }}pt; text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
+    {% endif %}
 
-    <div class="intro">{{ page.intro }}</div>
+    <div class="intro" style="top: {{ page.intro_top | default(layout.intro_top) }}pt;">{{ page.intro }}</div>
 
-    <div class="content">
+    <div class="content" style="top: {{ page.content_top | default(layout.content_top) }}pt;">
       {% for block in page.blocks %}
+      <div class="content-block">
         {% if block.type == "html" %}
           {{ block.html | safe }}
         {% elif block.type == "table" %}
           {{ render_table(block.table) }}
         {% endif %}
+      </div>
       {% endfor %}
     </div>
 
-    {% if page.refs %}
-    <div class="refs">
-      <div class="refs-line"></div>
-      {% for ref in page.refs %}
-      <div class="refs-text">{{ ref }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    {% if page.refs or page.footer_notes %}
+    <div class="footer-meta" style="bottom: {{ page.footer_meta_bottom | default(70) }}pt;">
+      {% if page.refs %}
+      <div class="refs">
+        <div class="refs-line"></div>
+        {% for ref in page.refs %}
+        <div class="refs-text">{{ ref }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-    {% if page.footer_notes %}
-    <div class="footer-notes">
-      {% for note in page.footer_notes %}
-      <div>{{ note }}</div>
-      {% endfor %}
+      {% if page.footer_notes %}
+      <div class="footer-notes">
+        {% for note in page.footer_notes %}
+        <div>{{ note }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
     {% endif %}
 
