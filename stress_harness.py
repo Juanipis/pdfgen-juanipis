@@ -6,7 +6,7 @@ from typing import Dict, List
 import fitz
 
 from pagination import LayoutConfig, Paginator
-from render import FONTS_CONF, render_pdf
+from render import FONTS_CONF, render_pdf, _build_pages_from_sections
 
 ROOT = pathlib.Path(__file__).resolve().parent
 CSS_PATH = ROOT / "template" / "boletin.css"
@@ -42,7 +42,7 @@ def make_text(words, sentence_len=14):
     return " ".join(tokens).capitalize() + "."
 
 
-def build_base_page():
+def build_theme():
     banner = str((ROOT / "assets" / "header-banner.png").resolve())
     logo = str((ROOT / "assets" / "logo.png").resolve())
     return {
@@ -50,124 +50,95 @@ def build_base_page():
         "header_logo_path": logo,
         "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
         "title_line2": "Trimestre 2024.",
-        "intro": "",
-        "blocks": [],
-        "refs": [],
-        "footer_notes": [],
-        "page_number": "1",
         "footer_site": "abaco.org.co",
         "footer_phone": "Telefono: 313 245 79 78",
+        "show_header_titles": False,
     }
 
 
 def build_case_long_header_intro():
-    page = build_base_page()
-    page["title_line1"] = (
+    theme = build_theme()
+    theme["title_line1"] = (
         "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia y la Region Andina "
         "con Enfasis en Tendencias Recientes y Prospectivas"
     )
-    page["title_line2"] = "Informe Especial de Resultados Consolidado - Primer Trimestre 2024"
+    theme["title_line2"] = "Informe Especial de Resultados Consolidado - Primer Trimestre 2024"
 
     words = "situacion alimentaria seguridad nutricional hogares vulnerables seguimiento continuo".split()
     intro = " ".join(make_text(words, 18) for _ in range(5))
-    page["intro"] = intro
-
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Resumen ejecutivo</div>
-<p>"""
-            + intro
-            + "</p>",
-        },
-        {
-            "type": "table",
-            "table": {
-                "groups": make_table_header(),
-                "rows": make_rows(20),
-                "total_width": 532.66,
-                "dep_width": 120.0,
-            },
-        },
-    ]
 
     return {
         "title": "Stress - Long Header + Intro",
-        "pages": [page],
+        "theme": theme,
+        "sections": [
+            {
+                "title": "I. Resumen ejecutivo",
+                "content": [
+                    {"type": "text", "text": intro},
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": make_table_header(),
+                            "rows": make_rows(20),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    },
+                ],
+            }
+        ],
     }
 
 
 def build_case_huge_table():
-    page = build_base_page()
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Tabla masiva</div>
-<div class=\"section-subtitle\">Mas de 200 filas con nombres largos.</div>
-""",
-        },
-        {
-            "type": "table",
-            "table": {
-                "groups": make_table_header(),
-                "rows": make_rows(220, long_names=True),
-                "total_width": 532.66,
-                "dep_width": 120.0,
-            },
-        },
-    ]
-
     return {
         "title": "Stress - Huge Table",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": "I. Tabla masiva",
+                "subtitle": "Mas de 200 filas con nombres largos.",
+                "content": [
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": make_table_header(),
+                            "rows": make_rows(220, long_names=True),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    }
+                ],
+            }
+        ],
     }
 
 
 def build_case_many_tables():
-    page = build_base_page()
-    blocks = []
-    for idx in range(1, 5):
-        blocks.append(
-            {
-                "type": "html",
-                "html": (
-                    f"<div class=\"section-title\"><span class=\"roman\">{idx}.</span> "
-                    f"Seccion {idx}</div>"
-                ),
-            }
-        )
-        blocks.append(
-            {
-                "type": "table",
-                "table": {
-                    "groups": make_table_header(),
-                    "rows": make_rows(50, prefix=f"Dept {idx}"),
-                    "total_width": 532.66,
-                    "dep_width": 120.0,
-                },
-            }
-        )
-    page["blocks"] = blocks
     return {
         "title": "Stress - Many Tables",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": f"{idx}. Seccion {idx}",
+                "content": [
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": make_table_header(),
+                            "rows": make_rows(50, prefix=f"Dept {idx}"),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    }
+                ],
+            }
+            for idx in range(1, 5)
+        ],
     }
 
 
 def build_case_long_refs_notes():
-    page = build_base_page()
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Referencias extensas</div>
-<p>Contenido breve para maximizar el espacio de referencias.</p>
-""",
-        }
-    ]
-
     refs = [
         f"{i} Fuente extensa con descripcion y detalles adicionales para pruebas de pie de pagina."
         for i in range(1, 18)
@@ -177,96 +148,102 @@ def build_case_long_refs_notes():
         for _ in range(8)
     ]
 
-    page["refs"] = refs
-    page["footer_notes"] = notes
-
     return {
         "title": "Stress - Long Refs/Notes",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": "I. Referencias extensas",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Contenido breve para maximizar el espacio de referencias.",
+                        "refs": refs,
+                    }
+                ],
+                "footer_notes": notes,
+            }
+        ],
     }
 
 
 def build_case_dense_html():
-    page = build_base_page()
-    paragraph = (
-        "<p>"
-        + " ".join(
-            "texto" for _ in range(200)
-        )
-        + "</p>"
-    )
-    html = (
-        "<div class=\"section-title-serif\">"
-        "III. Texto denso con muchos parrafos</div>"
-        + "".join(paragraph for _ in range(10))
-    )
-    page["blocks"] = [{"type": "html", "html": html}]
+    paragraph = " ".join("texto" for _ in range(200))
     return {
         "title": "Stress - Dense HTML",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": "III. Texto denso con muchos parrafos",
+                "content": [
+                    {"type": "text", "text": [paragraph for _ in range(10)]}
+                ],
+            }
+        ],
     }
 
 
 def build_case_mixed_overflow():
-    page = build_base_page()
-    page["title_line1"] = (
+    theme = build_theme()
+    theme["title_line1"] = (
         "Boletin de Seguimiento Intersemestral con Analisis Expandido de Indicadores"
     )
     words = "monitoreo hogares vulnerables intervencion seguridad alimentaria tendencia".split()
-    page["intro"] = " ".join(make_text(words, 20) for _ in range(7))
-
-    html_block = """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Panorama general</div>
-<p>""" + " ".join(make_text(words, 16) for _ in range(6)) + "</p>"
-
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": html_block,
-            "refs": [
-                "1 Fuente ligada al panorama general para pruebas de pie de pagina.",
-                "2 Segunda referencia para pruebas de ubicacion.",
-            ],
-        },
-        {
-            "type": "table",
-            "table": {
-                "groups": make_table_header(),
-                "rows": make_rows(80, long_names=True),
-                "total_width": 532.66,
-                "dep_width": 120.0,
-            },
-        },
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title-serif\">II. Comentarios adicionales</div>
-<p>""" + " ".join(make_text(words, 18) for _ in range(4)) + "</p>",
-            "refs": ["3 Nota asociada a comentarios adicionales."],
-        },
-        {
-            "type": "table",
-            "table": {
-                "groups": make_table_header(),
-                "rows": make_rows(60),
-                "total_width": 532.66,
-                "dep_width": 120.0,
-            },
-        },
-    ]
-
-    page["refs"] = [
-        f"{i} Fuente adicional con notas detalladas para pruebas de stress." for i in range(1, 6)
-    ]
+    intro = " ".join(make_text(words, 20) for _ in range(7))
 
     return {
         "title": "Stress - Mixed Overflow",
-        "pages": [page],
+        "theme": theme,
+        "sections": [
+            {
+                "title": "I. Panorama general",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": intro,
+                        "refs": [
+                            "1 Fuente ligada al panorama general para pruebas de pie de pagina.",
+                            "2 Segunda referencia para pruebas de ubicacion.",
+                        ],
+                    },
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": make_table_header(),
+                            "rows": make_rows(80, long_names=True),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    },
+                ],
+                "refs": [
+                    f"{i} Fuente adicional con notas detalladas para pruebas de stress." for i in range(1, 6)
+                ],
+            },
+            {
+                "title": "II. Comentarios adicionales",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": " ".join(make_text(words, 18) for _ in range(4)),
+                        "refs": ["3 Nota asociada a comentarios adicionales."],
+                    },
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": make_table_header(),
+                            "rows": make_rows(60),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    },
+                ],
+            },
+        ],
     }
 
 
 def build_case_extreme_table_headers():
-    page = build_base_page()
     header = [
         {
             "title": "Consumo insuficiente de alimentos y otras categorias extendidas (Millones)",
@@ -277,52 +254,76 @@ def build_case_extreme_table_headers():
             "months": ["Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
         },
     ]
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Encabezados extensos</div>
-<p>Tabla con encabezados largos y muchas columnas.</p>
-""",
-        },
-        {
-            "type": "table",
-            "table": {
-                "groups": header,
-                "rows": make_rows(30, val_count=12),
-                "total_width": 532.66,
-                "dep_width": 120.0,
-            },
-        },
-    ]
-
     return {
         "title": "Stress - Extended Headers",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": "I. Encabezados extensos",
+                "content": [
+                    {"type": "text", "text": "Tabla con encabezados largos y muchas columnas."},
+                    {
+                        "type": "table",
+                        "table": {
+                            "groups": header,
+                            "rows": make_rows(30, val_count=12),
+                            "total_width": 532.66,
+                            "dep_width": 120.0,
+                        },
+                    },
+                ],
+            }
+        ],
     }
 
 
 def build_case_sparse_sections():
-    page = build_base_page()
-    page["blocks"] = [
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Seccion corta</div>
-<p>Contenido breve.</p>
-""",
-        },
-        {
-            "type": "html",
-            "html": """
-<div class=\"section-title\"><span class=\"roman\">II.</span> Seccion con salto</div>
-<p>""" + " ".join("texto" for _ in range(120)) + "</p>",
-        },
-    ]
-
     return {
         "title": "Stress - Sparse Sections",
-        "pages": [page],
+        "theme": build_theme(),
+        "sections": [
+            {
+                "title": "I. Seccion corta",
+                "content": [{"type": "text", "text": "Contenido breve."}],
+            },
+            {
+                "title": "II. Seccion con salto",
+                "content": [{"type": "text", "text": " ".join("texto" for _ in range(120))}],
+            },
+        ],
+    }
+
+
+def build_case_random(name_suffix: str):
+    theme = build_theme()
+    words = "seguridad alimentaria riesgos datos tendencias vulnerables impacto".split()
+
+    sections = []
+    for idx in range(1, random.randint(3, 6)):
+        content = []
+        for _ in range(random.randint(2, 4)):
+            if random.random() < 0.5:
+                content.append({
+                    "type": "text",
+                    "text": " ".join(make_text(words, 16) for _ in range(random.randint(2, 4))),
+                    "refs": [f"{idx} Fuente simulada {random.randint(1, 99)}."],
+                })
+            else:
+                content.append({
+                    "type": "table",
+                    "table": {
+                        "groups": make_table_header(),
+                        "rows": make_rows(random.randint(12, 50)),
+                        "total_width": 532.66,
+                        "dep_width": 120.0,
+                    },
+                })
+        sections.append({"title": f"{idx}. Seccion aleatoria", "content": content})
+
+    return {
+        "title": f"Stress - Random {name_suffix}",
+        "theme": theme,
+        "sections": sections,
     }
 
 
@@ -382,10 +383,7 @@ def render_pngs(pdf_path: pathlib.Path, output_dir: pathlib.Path, zoom=2):
         pix.save(str(img_path))
 
 
-def run_case(case_name: str):
-    builder = CASES[case_name]
-    data = builder()
-
+def run_case(case_name: str, data: Dict):
     output_dir = OUTPUT_DIR / case_name
     output_dir.mkdir(parents=True, exist_ok=True)
     output_pdf = output_dir / "output.pdf"
@@ -393,11 +391,11 @@ def run_case(case_name: str):
     layout = LayoutConfig()
     paginator = Paginator(layout, str(CSS_PATH), str(ROOT), fonts_conf_path=str(FONTS_CONF))
 
-    paginated = paginator.paginate(copy.deepcopy(data["pages"]))
-    data["pages"] = paginated
-    data["layout"] = layout.to_template()
+    # Build pages for validation
+    build_data = _build_pages_from_sections(copy.deepcopy(data))
+    paginated = paginator.paginate(copy.deepcopy(build_data["pages"]))
 
-    render_pdf(data, output_path=output_pdf, paginate=False)
+    render_pdf(data, output_path=output_pdf, paginate=True)
     issues = validate_pages(paginator, paginated)
     render_pngs(output_pdf, output_dir)
 
@@ -410,8 +408,17 @@ def main():
     random.seed(42)
     failures = []
 
-    for case_name in CASES:
-        output_pdf, issues = run_case(case_name)
+    for case_name, builder in CASES.items():
+        output_pdf, issues = run_case(case_name, builder())
+        if issues:
+            failures.append((case_name, issues))
+        print(f"Case {case_name}: wrote {output_pdf} ({'issues' if issues else 'ok'})")
+        for issue in issues:
+            print(f"  - {issue}")
+
+    for idx in range(1, 6):
+        case_name = f"random_{idx}"
+        output_pdf, issues = run_case(case_name, build_case_random(case_name))
         if issues:
             failures.append((case_name, issues))
         print(f"Case {case_name}: wrote {output_pdf} ({'issues' if issues else 'ok'})")

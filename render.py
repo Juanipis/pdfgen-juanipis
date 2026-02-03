@@ -95,21 +95,31 @@ def build_sample_data():
 
     data = {
         "title": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer Trimestre 2024",
-        "pages": [
+        "theme": {
+            "header_banner_path": banner,
+            "header_banner_path_cont": banner_clean,
+            "header_logo_path": logo,
+            "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
+            "title_line2": "Trimestre 2024.",
+            "footer_site": "abaco.org.co",
+            "footer_phone": "Telefono: 313 245 79 78",
+            "show_header_titles": False,
+        },
+        "sections": [
             {
-                "header_banner_path": banner,
-                "header_banner_path_cont": banner_clean,
-                "header_logo_path": logo,
-                "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
-                "title_line2": "Trimestre 2024.",
-                "intro": "La Red de Bancos de Alimentos de Colombia ABACO presenta un analisis comparativo de",
-                "blocks": [
+                "title": "I. Indice de Riesgo de la situacion alimentaria en Colombia",
+                "subtitle": "Historico de Mapas Departamentales de la Situacion Alimentaria en Colombia durante el Primer Trimestre del 2024.",
+                "content": [
                     {
-                        "type": "html",
-                        "html": """
-<div class=\"section-title\"><span class=\"roman\">I.</span> Indice de Riesgo de la situacion alimentaria en Colombia</div>
-<div class=\"section-subtitle\">Historico de Mapas Departamentales de la Situacion Alimentaria en Colombia<br/>durante el Primer Trimestre del 2024.</div>
-""",
+                        "type": "text",
+                        "text": [
+                            "La Red de Bancos de Alimentos de Colombia ABACO presenta un analisis comparativo de indicadores clave sobre la situacion alimentaria y nutricional del pais en el I trimestre del ano 2024.",
+                            "Este cambio resalta la necesidad de un seguimiento continuo y detallado de las tendencias en seguridad alimentaria a lo largo del ano.",
+                        ],
+                        "refs": [
+                            "1 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 January 2024. P. 2",
+                            "2 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 19 February 2024. P. 2",
+                        ],
                     },
                     {
                         "type": "table",
@@ -120,12 +130,11 @@ def build_sample_data():
                             "dep_width": 120.0,
                         },
                     },
-                    {
-                        "type": "html",
-                        "html": """
-<div class=\"section-title\"><span class=\"roman\">II.</span> Indicadores de prevalencia de Consumo Insuficiente de Alimentos.</div>
-""",
-                    },
+                ],
+            },
+            {
+                "title": "II. Indicadores de prevalencia de Consumo Insuficiente de Alimentos.",
+                "content": [
                     {
                         "type": "table",
                         "table": {
@@ -134,13 +143,17 @@ def build_sample_data():
                             "total_width": 532.66,
                             "dep_width": 120.0,
                         },
-                    },
-                    {
-                        "type": "html",
-                        "html": """
-<div class=\"section-title-serif\">III.&nbsp;&nbsp;Estrategias de Afrontamiento a las Crisis Basadas en la<br/>Alimentacion.</div>
-""",
-                    },
+                        "refs": [
+                            "4 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 January 2024. P. 2",
+                            "5 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 19 February 2024. P. 2",
+                            "6 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 March 2024. P. 2",
+                        ],
+                    }
+                ],
+            },
+            {
+                "title": "III. Estrategias de Afrontamiento a las Crisis Basadas en la Alimentacion.",
+                "content": [
                     {
                         "type": "table",
                         "table": {
@@ -149,45 +162,126 @@ def build_sample_data():
                             "total_width": 532.66,
                             "dep_width": 120.0,
                         },
-                    },
-                ],
-                "refs": [
-                    "1 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 January 2024. P. 2",
-                    "2 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 19 February 2024. P. 2",
-                ],
-                "footer_notes": [],
-                "page_number": "1",
-                "footer_site": "abaco.org.co",
-                "footer_phone": "Telefono: 313 245 79 78",
-            },
-            {
-                "header_banner_path": banner,
-                "header_banner_path_cont": banner_clean,
-                "header_logo_path": logo,
-                "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
-                "title_line2": "Trimestre 2024.",
-                "intro": "",
-                "blocks": [
-                    {
-                        "type": "html",
-                        "html": """
-<p>Este cambio resalta la necesidad de un seguimiento continuo y detallado de las tendencias en seguridad alimentaria a lo largo del ano.</p>
-<p>La naturaleza dinamica de la situacion alimentaria exige una vigilancia constante, lo cual es fundamental para implementar de manera oportuna estrategias de intervencion y mitigacion que sean efectivas y adecuadas a las condiciones cambiantes.</p>
-""",
                     }
                 ],
-                "refs": [
-                    "4 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 January 2024. P. 2",
-                    "5 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 19 February 2024. P. 2",
-                    "6 World Food Programme (WFP). (2024). HungerMap LIVE: Colombia insight and key trends [PDF]. 31 March 2024. P. 2",
-                ],
-                "footer_notes": [],
-                "page_number": "2",
-                "footer_site": "abaco.org.co",
-                "footer_phone": "Telefono: 313 245 79 78",
             },
         ],
     }
+    return data
+
+
+def _paragraphs_from_text(text):
+    if isinstance(text, list):
+        return [t.strip() for t in text if t and t.strip()]
+    if not text:
+        return []
+    chunks = []
+    for block in str(text).split("\n\n"):
+        block = " ".join([line.strip() for line in block.splitlines()]).strip()
+        if block:
+            chunks.append(block)
+    return chunks
+
+
+def _section_heading_html(title, subtitle):
+    html = f"<div class=\"section-title\">{title}</div>" if title else ""
+    if subtitle:
+        html += f"<div class=\"section-subtitle\">{subtitle}</div>"
+    return html
+
+
+def _map_grid_html(items):
+    blocks = []
+    for item in items:
+        path = item.get("path")
+        label = item.get("label", "")
+        blocks.append(
+            "<div class=\"map-item\">"
+            f"<img class=\"map-img\" src=\"{path}\" alt=\"{label}\" />"
+            f"<div class=\"map-label\">{label}</div>"
+            "</div>"
+        )
+    return "<div class=\"map-grid\">" + "".join(blocks) + "</div>"
+
+
+def _figure_html(path, caption, wide=False):
+    cls = "figure figure-wide" if wide else "figure"
+    html = f"<img class=\"{cls}\" src=\"{path}\" alt=\"{caption}\" />"
+    if caption:
+        html += f"<div class=\"figure-caption\">{caption}</div>"
+    return html
+
+
+def _blocks_from_section(section):
+    blocks = []
+    title_html = _section_heading_html(section.get("title"), section.get("subtitle"))
+    if title_html:
+        blocks.append({"type": "html", "html": title_html, "keep_with_next": True})
+
+    for item in section.get("content", []):
+        itype = item.get("type", "text")
+        if itype == "text":
+            paragraphs = _paragraphs_from_text(item.get("text"))
+            if paragraphs:
+                html = "".join(f"<p>{p}</p>" for p in paragraphs)
+                block = {"type": "html", "html": html}
+            else:
+                continue
+        elif itype == "figure":
+            block = {
+                "type": "html",
+                "html": _figure_html(item.get("path"), item.get("caption", ""), item.get("wide", False)),
+            }
+        elif itype == "map_grid":
+            html = _map_grid_html(item.get("items", []))
+            if item.get("caption"):
+                html += f"<div class=\"figure-caption\">{item['caption']}</div>"
+            if item.get("source"):
+                html += f"<div class=\"figure-source\">{item['source']}</div>"
+            block = {"type": "html", "html": html}
+        elif itype == "table":
+            block = {"type": "table", "table": item.get("table", {})}
+        else:
+            block = {"type": "html", "html": item.get("html", "")}
+
+        if item.get("refs"):
+            block["refs"] = item.get("refs")
+        blocks.append(block)
+
+    if section.get("refs") and blocks:
+        blocks[0].setdefault("refs", [])
+        blocks[0]["refs"].extend(section["refs"])
+
+    return blocks
+
+
+def _build_pages_from_sections(data):
+    theme = data.get("theme", {})
+    pages = []
+    footer_notes = []
+
+    if data.get("cover"):
+        cover = dict(theme)
+        cover.update(data["cover"])
+        cover["cover"] = True
+        pages.append(cover)
+
+    blocks = []
+    for section in data.get("sections", []):
+        blocks.extend(_blocks_from_section(section))
+        if section.get("footer_notes"):
+            footer_notes.extend(section["footer_notes"])
+
+    pages.append({
+        **theme,
+        "intro": "",
+        "blocks": blocks,
+        "refs": [],
+        "footer_notes": footer_notes,
+        "page_number": "1",
+    })
+
+    data["pages"] = pages
     return data
 
 
@@ -195,6 +289,9 @@ def render_pdf(data, output_path=OUTPUT_PDF, paginate=True):
     os.environ.setdefault("FONTCONFIG_FILE", str(FONTS_CONF))
     env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
     template = env.get_template(TEMPLATE_NAME)
+
+    if "sections" in data and "pages" not in data:
+        data = _build_pages_from_sections(data)
 
     layout = LayoutConfig()
     paginator = Paginator(layout, str(CSS_PATH), str(ROOT), fonts_conf_path=str(FONTS_CONF))

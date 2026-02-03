@@ -179,6 +179,48 @@ html, body {
   font-size: 12pt;
 }
 
+.cover {
+  position: absolute;
+  top: 170pt;
+  left: 85.1pt;
+  width: 444pt;
+  text-align: center;
+  color: var(--blue-title);
+}
+
+.cover-title {
+  font-size: 20pt;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10pt;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 12pt;
+}
+
+.cover-lines {
+  font-size: 11pt;
+  color: #333333;
+  line-height: 1.35;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 6pt 0 2pt 0;
+}
+
+.chart-caption {
+  font-size: 9pt;
+  font-style: italic;
+  color: #333333;
+  margin-bottom: 8pt;
+}
+
 .tabla-abaco {
   border-collapse: collapse;
   table-layout: fixed;
@@ -273,4 +315,75 @@ html, body {
   bottom: 134pt;
   font-size: 6.5pt;
   color: #000000;
+}
+
+.report-title {
+  font-size: 20pt;
+  font-weight: 700;
+  text-align: center;
+  color: #2e5395;
+  margin-top: 12pt;
+}
+
+.report-subtitle {
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+  color: #2e5395;
+  margin-top: 6pt;
+  margin-bottom: 12pt;
+}
+
+.section-subtitle {
+  font-size: 10pt;
+  color: #2e5395;
+  text-align: center;
+  margin-bottom: 8pt;
+}
+
+.figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 8pt auto 4pt;
+}
+
+.figure-wide {
+  width: 100%;
+}
+
+.figure-caption {
+  font-size: 8pt;
+  color: #333;
+  text-align: center;
+  margin-bottom: 6pt;
+}
+
+.figure-source {
+  font-size: 8pt;
+  text-align: center;
+  margin-bottom: 10pt;
+}
+
+.map-grid {
+  display: flex;
+  gap: 10pt;
+  justify-content: space-between;
+  margin: 6pt 0 2pt;
+}
+
+.map-item {
+  width: 31%;
+  text-align: center;
+}
+
+.map-img {
+  width: 100%;
+  height: auto;
+  border-radius: 2pt;
+}
+
+.map-label {
+  font-weight: 700;
+  margin-top: 4pt;
 }

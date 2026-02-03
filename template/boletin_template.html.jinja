@@ -64,6 +64,21 @@
     <div class="header-subtitle" style="top: {{ page.header_subtitle_top | default(90.77) }}pt; left: {{ page.header_subtitle_left | default(260.8) }}pt; width: {{ page.header_subtitle_width | default(220) }}pt; text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
     {% endif %}
 
+    {% if page.cover %}
+    <div class="cover">
+      <div class="cover-title">{{ page.cover_title }}</div>
+      {% if page.cover_subtitle %}
+      <div class="cover-subtitle">{{ page.cover_subtitle }}</div>
+      {% endif %}
+      {% if page.cover_lines %}
+      <div class="cover-lines">
+        {% for line in page.cover_lines %}
+        <div>{{ line }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
     <div class="intro" style="top: {{ page.intro_top | default(layout.intro_top) }}pt;">{{ page.intro }}</div>
 
     <div class="content" style="top: {{ page.content_top | default(layout.content_top) }}pt;">
@@ -77,8 +92,9 @@
       </div>
       {% endfor %}
     </div>
+    {% endif %}
 
-    {% if page.refs or page.footer_notes %}
+    {% if not page.cover and (page.refs or page.footer_notes) %}
     <div class="footer-meta" style="bottom: {{ page.footer_meta_bottom | default(70) }}pt;">
       {% if page.refs %}
       <div class="refs">

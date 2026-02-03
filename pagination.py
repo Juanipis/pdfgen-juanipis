@@ -46,6 +46,7 @@ class LayoutConfig:
     intro_gap_pt: float = 12.0
     header_subtitle_gap_pt: float = 2.0
     safety_pad_pt: float = 6.0
+    min_content_height_pt: float = 48.0
 
     def to_template(self) -> Dict[str, float]:
         return {
@@ -357,6 +358,12 @@ class Paginator:
     def paginate(self, pages_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         result_pages: List[Dict[str, Any]] = []
         for page in pages_data:
+            if page.get("cover"):
+                page_copy = dict(page)
+                page_copy.setdefault("page_number", "")
+                page_copy.setdefault("show_header_titles", False)
+                result_pages.append(page_copy)
+                continue
             result_pages.extend(self._paginate_single_page(page, result_pages))
         return result_pages
 
@@ -419,6 +426,7 @@ class Paginator:
                     limit = layout_state.content_height_base_pt
             else:
                 limit = layout_state.content_height_base_pt
+            limit = max(limit, self.layout.min_content_height_pt)
 
             used = 0.0
             page_blocks: List[BlockItem] = []
@@ -708,6 +716,15 @@ class Paginator:
             self.layout.page_height_pt - content_top - reserved_meta - self.layout.safety_pad_pt
         )
 
+        if content_height_meta < self.layout.min_content_height_pt:
+            LOGGER.warning(
+                "Footer/meta area exceeds available page space; clamping content height to %.2fpt.",
+                self.layout.min_content_height_pt,
+            )
+
+        content_height_base = max(content_height_base, self.layout.min_content_height_pt)
+        content_height_meta = max(content_height_meta, self.layout.min_content_height_pt)
+
         return PageLayoutState(
             intro_top_pt=intro_top,
             content_top_pt=content_top,
@@ -909,12 +926,19 @@ class Paginator:
             layout_state.reserved_base_pt,
             layout_state.footer_meta_bottom_pt + footer_meta_height,
         )
-        return (
+        content_height = (
             self.layout.page_height_pt
             - layout_state.content_top_pt
             - reserved_meta
             - self.layout.safety_pad_pt
         )
+        if content_height < self.layout.min_content_height_pt:
+            LOGGER.warning(
+                "Footer/meta area exceeds available page space; clamping content height to %.2fpt.",
+                self.layout.min_content_height_pt,
+            )
+            return self.layout.min_content_height_pt
+        return content_height
 
 def split_html_into_chunks(html: str) -> List[str]:
     lowered = html.lower()
