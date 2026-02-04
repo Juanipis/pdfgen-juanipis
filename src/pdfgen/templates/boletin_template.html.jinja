@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+</head>
+<body>
+  {% macro render_table(table) %}
+    {% set total_width = table.total_width or 532.66 %}
+    {% set dep_width = table.dep_width or 120.0 %}
+    {% set show_header = table.show_header if table.show_header is defined else true %}
+    {% set ns = namespace(num_cols=0) %}
+    {% for g in table.groups %}
+      {% set ns.num_cols = ns.num_cols + (g.months | length) %}
+    {% endfor %}
+    {% set num_cols = ns.num_cols %}
+    {% set num_width = (total_width - dep_width) / (num_cols if num_cols else 1) %}
+    <div class="table-wrap">
+      <table class="tabla-abaco">
+        <colgroup>
+          <col style="width: {{ '%.2f' % dep_width }}pt;">
+          {% for _ in range(num_cols) %}
+          <col style="width: {{ '%.2f' % num_width }}pt;">
+          {% endfor %}
+        </colgroup>
+        {% if show_header %}
+        <thead>
+          <tr>
+            <th class="col-dep" rowspan="2">Departamento/Mes</th>
+            {% for g in table.groups %}
+            <th class="col-num" colspan="{{ g.months | length }}">{{ g.title }}</th>
+            {% endfor %}
+          </tr>
+          <tr>
+            {% for g in table.groups %}
+              {% for month in g.months %}
+              <th class="col-num">{{ month }}</th>
+              {% endfor %}
+            {% endfor %}
+          </tr>
+        </thead>
+        {% endif %}
+        <tbody>
+          {% for row in table.rows %}
+          <tr>
+            <td class="col-dep">{{ row.dep }}</td>
+            {% for val in row.vals %}
+            <td>{{ val }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endmacro %}
+
+  {% for page in pages %}
+  <div class="page">
+    <img class="header-banner" src="{{ page.header_banner_path_cont if not page.show_header_titles and page.header_banner_path_cont is defined else page.header_banner_path }}" alt="Banner" />
+    <img class="header-logo" src="{{ page.header_logo_path }}" alt="Logo" />
+
+    {% if page.show_header_titles %}
+    <div class="header-title" style="top: {{ page.header_title_top | default(73.7) }}pt; left: {{ page.header_title_left | default(94.7) }}pt; width: {{ page.header_title_width | default(430) }}pt; text-align: {{ page.header_title_align | default('left') }};">{{ page.title_line1 }}</div>
+    <div class="header-subtitle" style="top: {{ page.header_subtitle_top | default(90.77) }}pt; left: {{ page.header_subtitle_left | default(260.8) }}pt; width: {{ page.header_subtitle_width | default(220) }}pt; text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
+    {% endif %}
+
+    {% if page.cover %}
+    <div class="cover">
+      <div class="cover-title">{{ page.cover_title }}</div>
+      {% if page.cover_subtitle %}
+      <div class="cover-subtitle">{{ page.cover_subtitle }}</div>
+      {% endif %}
+      {% if page.cover_lines %}
+      <div class="cover-lines">
+        {% for line in page.cover_lines %}
+        <div>{{ line }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="intro" style="top: {{ page.intro_top | default(layout.intro_top) }}pt;">{{ page.intro }}</div>
+
+    <div class="content" style="top: {{ page.content_top | default(layout.content_top) }}pt;">
+      {% for block in page.blocks %}
+      <div class="content-block">
+        {% if block.type == "html" %}
+          {{ block.html | safe }}
+        {% elif block.type == "table" %}
+          {{ render_table(block.table) }}
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not page.cover and (page.refs or page.footer_notes) %}
+    <div class="footer-meta" style="bottom: {{ page.footer_meta_bottom | default(70) }}pt;">
+      {% if page.refs %}
+      <div class="refs">
+        <div class="refs-line"></div>
+        {% for ref in page.refs %}
+        <div class="refs-text">{{ ref }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if page.footer_notes %}
+      <div class="footer-notes">
+        {% for note in page.footer_notes %}
+        <div>{{ note }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if page.page_number %}
+    <div class="footer-page">{{ page.page_number }}</div>
+    {% endif %}
+
+    <div class="footer-contact">
+      <div>{{ page.footer_site }}</div>
+      <div>{{ page.footer_phone }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdfgen-juanipis"
+version = "0.1.0"
+description = "HTML-to-PDF generator with pagination and validation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "ABACO" }
+]
+dependencies = [
+  "Jinja2==3.1.4",
+  "WeasyPrint==59.0",
+  "pydyf==0.10.0",
+  "jsonschema==4.23.0",
+  "PyYAML==6.0.2"
+]
+
+[project.scripts]
+pdfgen = "pdfgen.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pdfgen = [
+  "schema.json",
+  "templates/*.css",
+  "templates/*.jinja",
+  "assets/fonts/*",
+  "assets/*.png"
+]

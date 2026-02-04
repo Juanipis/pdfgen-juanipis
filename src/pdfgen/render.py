@@ -9,9 +9,11 @@ if __name__ == "__main__" and __package__ is None:
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from pdfgen.pagination import LayoutConfig, Paginator
+from pdfgen.validator import validate_and_normalize
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-TEMPLATE_DIR = ROOT / "template"
+PACKAGE_ROOT = pathlib.Path(__file__).resolve().parent
+TEMPLATE_DIR = PACKAGE_ROOT / "templates"
 TEMPLATE_NAME = "boletin_template.html.jinja"
 CSS_PATH = TEMPLATE_DIR / "boletin.css"
 OUTPUT_PDF = ROOT / "output.pdf"
@@ -19,9 +21,9 @@ FONTS_CONF = ROOT / "fonts.conf"
 
 
 def build_sample_data():
-    banner = str((ROOT / "assets" / "header-banner.png").resolve())
-    banner_clean = str((ROOT / "assets" / "header-banner-clean.png").resolve())
-    logo = str((ROOT / "assets" / "logo.png").resolve())
+    banner = str((PACKAGE_ROOT / "assets" / "banner.png").resolve())
+    banner_clean = str((PACKAGE_ROOT / "assets" / "banner-clean.png").resolve())
+    logo = str((PACKAGE_ROOT / "assets" / "logo.png").resolve())
 
     table_header = [
         {
@@ -98,15 +100,15 @@ def build_sample_data():
     ]
 
     data = {
-        "title": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer Trimestre 2024",
+        "title": "Reporte de Indicadores - Ejemplo Generico 2024",
         "theme": {
             "header_banner_path": banner,
             "header_banner_path_cont": banner_clean,
             "header_logo_path": logo,
-            "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
-            "title_line2": "Trimestre 2024.",
-            "footer_site": "abaco.org.co",
-            "footer_phone": "Telefono: 313 245 79 78",
+            "title_line1": "Reporte de Indicadores y Tendencias",
+            "title_line2": "Ejemplo Generico - 2024",
+            "footer_site": "example.org",
+            "footer_phone": "Contacto: +1 555 0100",
             "show_header_titles": False,
         },
         "sections": [
@@ -291,25 +293,48 @@ def _build_pages_from_sections(data):
     return data
 
 
-def render_pdf(data, output_path=OUTPUT_PDF, paginate=True):
-    os.environ.setdefault("FONTCONFIG_FILE", str(FONTS_CONF))
-    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+def render_pdf(
+    data,
+    output_path=OUTPUT_PDF,
+    paginate=True,
+    validate=True,
+    template_dir=None,
+    css_path=None,
+    fonts_conf=None,
+    css_extra=None,
+    root_dir=None,
+):
+    root_dir = pathlib.Path(root_dir) if root_dir else ROOT
+    template_dir = pathlib.Path(template_dir) if template_dir else TEMPLATE_DIR
+    css_path = pathlib.Path(css_path) if css_path else CSS_PATH
+    fonts_conf = pathlib.Path(fonts_conf) if fonts_conf else None
+
+    if fonts_conf and fonts_conf.exists():
+        os.environ.setdefault("FONTCONFIG_FILE", str(fonts_conf))
+    env = Environment(loader=FileSystemLoader(str(template_dir)))
     template = env.get_template(TEMPLATE_NAME)
 
     if "sections" in data and "pages" not in data:
         data = _build_pages_from_sections(data)
 
+    if validate:
+        data, warnings = validate_and_normalize(data, root_dir=root_dir)
+        for warning in warnings:
+            print(f"[validate] {warning}")
+
     layout = LayoutConfig()
-    paginator = Paginator(layout, str(CSS_PATH), str(ROOT), fonts_conf_path=str(FONTS_CONF))
+    paginator = Paginator(layout, str(css_path), str(root_dir), fonts_conf_path=str(fonts_conf))
     if paginate:
         data["pages"] = paginator.paginate(data["pages"])
     data["layout"] = layout.to_template()
 
     html = template.render(**data)
 
-    HTML(string=html, base_url=str(ROOT)).write_pdf(
-        output_path, stylesheets=[CSS(filename=str(CSS_PATH))]
-    )
+    stylesheets = [CSS(filename=str(css_path))]
+    if css_extra:
+        stylesheets.append(CSS(string=str(css_extra)))
+
+    HTML(string=html, base_url=str(root_dir)).write_pdf(output_path, stylesheets=stylesheets)
 
     print(f"Wrote {output_path}")
 

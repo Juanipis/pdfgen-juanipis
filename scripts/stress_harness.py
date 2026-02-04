@@ -51,10 +51,10 @@ def build_theme():
     return {
         "header_banner_path": banner,
         "header_logo_path": logo,
-        "title_line1": "Boletin sobre la Situacion Alimentaria y Nutricional en Colombia - Primer",
-        "title_line2": "Trimestre 2024.",
-        "footer_site": "abaco.org.co",
-        "footer_phone": "Telefono: 313 245 79 78",
+        "title_line1": "Reporte de Indicadores y Tendencias - Primer",
+        "title_line2": "Trimestre 2024",
+        "footer_site": "example.org",
+        "footer_phone": "Contacto: +1 555 0100",
         "show_header_titles": False,
     }
 
