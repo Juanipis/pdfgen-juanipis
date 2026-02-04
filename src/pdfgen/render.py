@@ -303,6 +303,7 @@ def render_pdf(
     fonts_conf=None,
     css_extra=None,
     root_dir=None,
+    output_bytes=False,
 ):
     root_dir = pathlib.Path(root_dir) if root_dir else ROOT
     template_dir = pathlib.Path(template_dir) if template_dir else TEMPLATE_DIR
@@ -334,7 +335,13 @@ def render_pdf(
     if css_extra:
         stylesheets.append(CSS(string=str(css_extra)))
 
+    if output_bytes or output_path is None:
+        return HTML(string=html, base_url=str(root_dir)).write_pdf(
+            stylesheets=stylesheets
+        )
+
     HTML(string=html, base_url=str(root_dir)).write_pdf(output_path, stylesheets=stylesheets)
+    return None
 
     print(f"Wrote {output_path}")
 

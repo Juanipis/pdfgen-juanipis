@@ -3,7 +3,7 @@
 from pdfgen.render import render_pdf, build_sample_data
 from pdfgen.validator import validate_and_normalize
 from pdfgen.pagination import LayoutConfig, Paginator
-from pdfgen.api import PDFGen, PDFGenConfig, render_with_defaults
+from pdfgen.api import PDFGen, PDFGenConfig, render_with_defaults, render_with_defaults_bytes
 
 __all__ = [
     "render_pdf",
@@ -14,4 +14,5 @@ __all__ = [
     "PDFGen",
     "PDFGenConfig",
     "render_with_defaults",
+    "render_with_defaults_bytes",
 ]

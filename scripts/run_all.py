@@ -20,12 +20,6 @@ def run_demo():
     demo_report.main()
 
 
-def run_real():
-    from scripts import real_boletin
-
-    real_boletin.main()
-
-
 def run_stress():
     from scripts import stress_harness
 
@@ -36,12 +30,11 @@ def main():
     parser = argparse.ArgumentParser(description="Run PDF generation checks.")
     parser.add_argument("--sample", action="store_true", help="Render sample output.pdf")
     parser.add_argument("--demo", action="store_true", help="Render demo_output.pdf")
-    parser.add_argument("--real", action="store_true", help="Render boletin_real_output.pdf")
     parser.add_argument("--stress", action="store_true", help="Run stress harness")
     args = parser.parse_args()
 
     # Default: run sample + demo
-    run_any = args.sample or args.demo or args.real or args.stress
+    run_any = args.sample or args.demo or args.stress
     if not run_any:
         args.sample = True
         args.demo = True
@@ -50,8 +43,6 @@ def main():
         run_sample()
     if args.demo:
         run_demo()
-    if args.real:
-        run_real()
     if args.stress:
         run_stress()
 

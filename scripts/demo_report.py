@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+PACKAGE_ASSETS = ROOT / "src" / "pdfgen" / "assets"
 
 from pdfgen.render import render_pdf, FONTS_CONF
 
-ASSETS = ROOT / "assets"
+ASSETS = ROOT / "tmp_assets"
 CHARTS_DIR = ASSETS / "charts"
 
 
@@ -89,9 +90,9 @@ def long_paragraph(sentences=5):
 
 
 def build_demo_data(charts):
-    banner = str((ASSETS / "header-banner.png").resolve())
-    banner_clean = str((ASSETS / "header-banner-clean.png").resolve())
-    logo = str((ASSETS / "logo.png").resolve())
+    banner = str((PACKAGE_ASSETS / "banner.png").resolve())
+    banner_clean = str((PACKAGE_ASSETS / "banner-clean.png").resolve())
+    logo = str((PACKAGE_ASSETS / "logo.png").resolve())
 
     table_header = [
         {

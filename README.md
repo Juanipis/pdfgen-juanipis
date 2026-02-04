@@ -29,6 +29,16 @@ from pdfgen.api import render_with_defaults
 render_with_defaults(data, output_path="salida.pdf", root_dir="/ruta/a/tu/proyecto")
 ```
 
+## Salida en bytes
+
+Si no quieres escribir a disco:
+
+```python
+from pdfgen.api import render_with_defaults_bytes
+
+pdf_bytes = render_with_defaults_bytes(data, root_dir="/ruta/a/tu/proyecto")
+```
+
 ## CLI
 
 Render (JSON o YAML):
@@ -58,6 +68,7 @@ Opciones útiles:
 - `--css-extra` inyectar CSS adicional
 - `--no-validate` desactivar validación
 - `--no-paginate` desactivar paginación
+- `--stdout` escribir bytes a stdout
 
 ## Personalización
 
@@ -91,6 +102,10 @@ render_with_defaults(data, "salida.pdf", root_dir="/ruta", css_extra=css_extra)
 ```bash
 pdfgen render data.json salida.pdf --template-dir /ruta/template --css /ruta/template/boletin.css
 ```
+
+### Assets
+
+El usuario debe proveer `banner.png` y `logo.png` (o rutas absolutas). Si no usas `assets/` en tu proyecto, indica rutas absolutas en `theme`.
 
 ## Estructura mínima del data
 
@@ -126,6 +141,10 @@ Los bloques de texto aceptan HTML:
 ## Ejemplos
 
 - `examples/minimal.yaml`
+- `examples/minimal.json`
+- `notebooks/usage.ipynb`
+- `notebooks/bytes.ipynb`
+- `notebooks/advanced.ipynb`
 
 ## Validación
 

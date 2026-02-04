@@ -60,6 +60,7 @@ def main(argv=None) -> int:
     render.add_argument("--format", dest="fmt", default=None, help="Input format: json|yaml")
     render.add_argument("--no-validate", action="store_true")
     render.add_argument("--no-paginate", action="store_true")
+    render.add_argument("--stdout", action="store_true", help="Write PDF bytes to stdout")
 
     validate = sub.add_parser("validate", help="Validate JSON/YAML input against schema")
     validate.add_argument("input", help="Path to JSON/YAML data (or - for stdin)")
@@ -91,6 +92,16 @@ def main(argv=None) -> int:
         config.fonts_conf = _build_fonts_conf(pathlib.Path(args.fonts_dir))
 
     data = _load_data(pathlib.Path(args.input), fmt=args.fmt)
+
+    if args.stdout:
+        pdf_bytes = PDFGen(config).render_bytes(
+            data,
+            paginate=not args.no_paginate,
+            validate=not args.no_validate,
+            css_extra=args.css_extra,
+        )
+        sys.stdout.buffer.write(pdf_bytes)
+        return 0
 
     PDFGen(config).render(
         data,

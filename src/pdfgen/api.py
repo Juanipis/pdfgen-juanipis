@@ -55,6 +55,26 @@ class PDFGen:
             root_dir=self.config.root_dir,
         )
 
+    def render_bytes(
+        self,
+        data: Dict[str, Any],
+        paginate: bool = True,
+        validate: bool = True,
+        css_extra: Optional[str] = None,
+    ) -> bytes:
+        return render_pdf(
+            data,
+            output_path=None,
+            paginate=paginate,
+            validate=validate,
+            css_extra=css_extra,
+            template_dir=self.config.template_dir,
+            css_path=self.config.css_path,
+            fonts_conf=self.config.fonts_conf,
+            root_dir=self.config.root_dir,
+            output_bytes=True,
+        )
+
 
 def render_with_defaults(
     data: Dict[str, Any],
@@ -67,3 +87,15 @@ def render_with_defaults(
     root = pathlib.Path(root_dir) if root_dir else pathlib.Path.cwd()
     config = PDFGenConfig.from_root(root)
     PDFGen(config).render(data, output_path, paginate=paginate, validate=validate, css_extra=css_extra)
+
+
+def render_with_defaults_bytes(
+    data: Dict[str, Any],
+    root_dir: Optional[pathlib.Path] = None,
+    paginate: bool = True,
+    validate: bool = True,
+    css_extra: Optional[str] = None,
+) -> bytes:
+    root = pathlib.Path(root_dir) if root_dir else pathlib.Path.cwd()
+    config = PDFGenConfig.from_root(root)
+    return PDFGen(config).render_bytes(data, paginate=paginate, validate=validate, css_extra=css_extra)

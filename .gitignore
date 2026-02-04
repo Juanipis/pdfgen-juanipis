@@ -12,13 +12,18 @@ __pycache__/
 
 # Outputs
 stress_outputs/
+tmp_assets/
 output_page*.png
 output.pdf
 demo_output.pdf
 boletin_real_output.pdf
 boletin_text.txt
-assets/charts/
-assets/charts_real/
+
+# Build artifacts
+dist/
+build/
+*.whl
+*.tar.gz
 
 # OS
 .DS_Store

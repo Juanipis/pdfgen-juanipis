@@ -46,8 +46,8 @@ def make_text(words, sentence_len=14):
 
 
 def build_theme():
-    banner = str((ROOT / "assets" / "header-banner.png").resolve())
-    logo = str((ROOT / "assets" / "logo.png").resolve())
+    banner = str((ROOT / "src" / "pdfgen" / "assets" / "banner.png").resolve())
+    logo = str((ROOT / "src" / "pdfgen" / "assets" / "logo.png").resolve())
     return {
         "header_banner_path": banner,
         "header_logo_path": logo,
