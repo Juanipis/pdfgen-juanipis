@@ -2,13 +2,15 @@ import math
 import os
 import pathlib
 import random
-from datetime import datetime
+import sys
 
 import matplotlib.pyplot as plt
 
-from render import render_pdf, FONTS_CONF
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
-ROOT = pathlib.Path(__file__).resolve().parent
+from pdfgen.render import render_pdf, FONTS_CONF
+
 ASSETS = ROOT / "assets"
 CHARTS_DIR = ASSETS / "charts"
 

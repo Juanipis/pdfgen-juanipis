@@ -1,13 +1,16 @@
 import os
 import pathlib
 import re
+import sys
 from typing import List, Tuple
 
 import fitz
 
-from render import render_pdf, FONTS_CONF
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
-ROOT = pathlib.Path(__file__).resolve().parent
+from pdfgen.render import render_pdf, FONTS_CONF
+
 ASSETS = ROOT / "assets"
 EXTRACTED = ASSETS / "extracted"
 

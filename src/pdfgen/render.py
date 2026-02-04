@@ -1,12 +1,16 @@
 import os
 import pathlib
+import sys
 
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML, CSS
 
-from pagination import LayoutConfig, Paginator
+if __name__ == "__main__" and __package__ is None:
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
-ROOT = pathlib.Path(__file__).resolve().parent
+from pdfgen.pagination import LayoutConfig, Paginator
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 TEMPLATE_DIR = ROOT / "template"
 TEMPLATE_NAME = "boletin_template.html.jinja"
 CSS_PATH = TEMPLATE_DIR / "boletin.css"
@@ -259,6 +263,7 @@ def _build_pages_from_sections(data):
     theme = data.get("theme", {})
     pages = []
     footer_notes = []
+    refs_catalog = data.get("refs_catalog", {})
 
     if data.get("cover"):
         cover = dict(theme)
@@ -277,6 +282,7 @@ def _build_pages_from_sections(data):
         "intro": "",
         "blocks": blocks,
         "refs": [],
+        "refs_catalog": refs_catalog,
         "footer_notes": footer_notes,
         "page_number": "1",
     })

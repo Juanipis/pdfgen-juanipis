@@ -4,3 +4,4 @@ pdfminer.six==20231228
 Pillow==12.1.0
 WeasyPrint==59.0
 pydyf==0.10.0
+pytest==8.3.4

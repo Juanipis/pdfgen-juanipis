@@ -1,14 +1,17 @@
 import copy
 import pathlib
 import random
+import sys
 from typing import Dict, List
 
 import fitz
 
-from pagination import LayoutConfig, Paginator
-from render import FONTS_CONF, render_pdf, _build_pages_from_sections
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
-ROOT = pathlib.Path(__file__).resolve().parent
+from pdfgen.pagination import LayoutConfig, Paginator
+from pdfgen.render import FONTS_CONF, render_pdf, _build_pages_from_sections
+
 CSS_PATH = ROOT / "template" / "boletin.css"
 OUTPUT_DIR = ROOT / "stress_outputs"
 
@@ -327,6 +330,32 @@ def build_case_random(name_suffix: str):
     }
 
 
+def build_case_inline_refs_split():
+    theme = build_theme()
+    words = "seguridad alimentaria riesgos datos tendencias vulnerables impacto".split()
+    long_text = " ".join(make_text(words, 18) for _ in range(20))
+    # Insert many inline refs to force distribution across chunks.
+    inline_text = (
+        f"{long_text} [1] {long_text} [2,3] {long_text} [4-6] "
+        f"{long_text} [7] {long_text} [8–10]"
+    )
+    refs_catalog = {str(i): f"{i} Fuente inline generada para stress." for i in range(1, 11)}
+
+    return {
+        "title": "Stress - Inline Refs Split",
+        "theme": theme,
+        "refs_catalog": refs_catalog,
+        "sections": [
+            {
+                "title": "I. Texto largo con referencias inline",
+                "content": [
+                    {"type": "text", "text": inline_text},
+                ],
+            }
+        ],
+    }
+
+
 CASES = {
     "long_header_intro": build_case_long_header_intro,
     "huge_table": build_case_huge_table,
@@ -336,6 +365,7 @@ CASES = {
     "mixed_overflow": build_case_mixed_overflow,
     "extended_headers": build_case_extreme_table_headers,
     "sparse_sections": build_case_sparse_sections,
+    "inline_refs_split": build_case_inline_refs_split,
 }
 
 

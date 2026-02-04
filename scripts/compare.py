@@ -1,8 +1,9 @@
 import pathlib
+
 import fitz
 from PIL import Image, ImageChops, ImageStat
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 ORIG = ROOT / "boletin.pdf"
 GEN = ROOT / "output.pdf"
 

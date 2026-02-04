@@ -409,7 +409,8 @@ class Paginator:
             layout_other.content_height_meta_pt,
         )
 
-        normalized_blocks = self._normalize_blocks(blocks, min_page_height)
+        refs_catalog = page.get("refs_catalog", {})
+        normalized_blocks = self._normalize_blocks(blocks, min_page_height, refs_catalog)
         pages_build: List[PageBuild] = []
         idx = 0
         page_idx = 0
@@ -734,7 +735,12 @@ class Paginator:
             footer_meta_bottom_pt=footer_meta_bottom,
         )
 
-    def _normalize_blocks(self, blocks: List[Dict[str, Any]], max_height_pt: float) -> List[BlockItem]:
+    def _normalize_blocks(
+        self,
+        blocks: List[Dict[str, Any]],
+        max_height_pt: float,
+        refs_catalog: Dict[str, str],
+    ) -> List[BlockItem]:
         normalized: List[BlockItem] = []
         for block in blocks:
             block_refs = block.get("refs", [])
@@ -751,13 +757,17 @@ class Paginator:
                 keep_with_next = _needs_keep_with_next(html)
                 split_html = self._split_html_block(html, max_height_pt)
                 for idx, chunk in enumerate(split_html):
+                    if block_refs:
+                        chunk_refs = block_refs if idx == 0 else []
+                    else:
+                        chunk_refs = _refs_from_html(chunk, refs_catalog)
                     height = self.measurer.measure_html(chunk)
                     normalized.append(
                         BlockItem(
                             data={"type": "html", "html": chunk},
                             height_pt=height,
                             keep_with_next=keep_with_next and idx == 0,
-                            refs=block_refs if idx == 0 else [],
+                            refs=chunk_refs,
                             notes=block_notes if idx == 0 else [],
                         )
                     )
@@ -973,12 +983,59 @@ def split_html_into_chunks(html: str) -> List[str]:
         if len(chunks) > 1:
             return chunks
 
+    # Fallback: split very long single-paragraph HTML by sentences.
+    text_only = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
+    if text_only and (len(text_only) > 800 or ("<p" in lowered and "</p>" in lowered)):
+        sentences = re.split(r"(?<=[\.\?\!])\s+", text_only)
+        if len(sentences) > 1:
+            chunks = [f"<p>{s.strip()}</p>" for s in sentences if s.strip()]
+            if len(chunks) > 1:
+                return chunks
+
     return [html]
 
 
 def _needs_keep_with_next(html: str) -> bool:
     lowered = html.lower()
     return "section-title" in lowered or "section-title-serif" in lowered or "section-subtitle" in lowered
+
+
+def _refs_from_html(html: str, refs_catalog: Dict[str, str]) -> List[str]:
+    if not refs_catalog:
+        return []
+    ids = _extract_ref_ids(html)
+    refs = []
+    for ref_id in ids:
+        ref_text = refs_catalog.get(ref_id)
+        if ref_text:
+            refs.append(ref_text)
+    return refs
+
+
+def _extract_ref_ids(html: str) -> List[str]:
+    ids: List[str] = []
+    seen = set()
+    for match in re.findall(r"\[(.*?)\]", html):
+        for token in re.split(r"[;,]\s*", match.strip()):
+            token = token.strip()
+            if not token:
+                continue
+            range_match = re.match(r"^(\d+)\s*[-–]\s*(\d+)$", token)
+            if range_match:
+                start = int(range_match.group(1))
+                end = int(range_match.group(2))
+                step = 1 if end >= start else -1
+                for val in range(start, end + step, step):
+                    key = str(val)
+                    if key not in seen:
+                        ids.append(key)
+                        seen.add(key)
+                continue
+            if re.match(r"^\d+$", token):
+                if token not in seen:
+                    ids.append(token)
+                    seen.add(token)
+    return ids
 
 
 def _suffix_sums(values: List[float]) -> List[float]:
