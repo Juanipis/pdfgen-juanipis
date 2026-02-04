@@ -140,3 +140,7 @@ pdf.render(data, output_path="salida.pdf", validate=False)
 ## Licencia
 
 MIT
+
+## Releases
+
+Al hacer push a `main`, el workflow **Auto Release** crea tag y Release si la versión en `pyproject.toml` es nueva, y publica automáticamente en PyPI.

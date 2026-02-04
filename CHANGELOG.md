@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- _TBD_
+
 ## 0.1.0 - 2026-02-04
 
 - Initial package release with HTML-to-PDF rendering.
