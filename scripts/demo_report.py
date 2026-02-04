@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-PACKAGE_ASSETS = ROOT / "src" / "pdfgen" / "assets"
+PACKAGE_ASSETS = ROOT / "src" / "pdfgen_juanipis" / "assets"
 
-from pdfgen.render import render_pdf, FONTS_CONF
+from pdfgen_juanipis.render import render_pdf, FONTS_CONF
 
 ASSETS = ROOT / "tmp_assets"
 CHARTS_DIR = ASSETS / "charts"

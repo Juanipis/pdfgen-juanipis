@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from pdfgen.cli import main
+from pdfgen_juanipis.cli import main
 
 
 class _StdoutProxy:

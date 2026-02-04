@@ -220,7 +220,7 @@ def _extract_ref_ids(text: str) -> List[str]:
 
 def _validate_schema(data: Dict[str, Any], root_dir: pathlib.Path) -> List[str]:
     warnings: List[str] = []
-    schema_path = root_dir / "src" / "pdfgen" / "schema.json"
+    schema_path = root_dir / "src" / "pdfgen_juanipis" / "schema.json"
     if not schema_path.exists():
         schema_path = pathlib.Path(__file__).resolve().parent / "schema.json"
     if not schema_path.exists():

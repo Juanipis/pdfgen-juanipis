@@ -1,6 +1,6 @@
 import pathlib
 
-from pdfgen.validator import validate_and_normalize
+from pdfgen_juanipis.validator import validate_and_normalize
 
 
 def test_schema_validation_catches_missing_sections(tmp_path):

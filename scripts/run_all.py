@@ -6,7 +6,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from pdfgen.render import build_sample_data, render_pdf
+from pdfgen_juanipis.render import build_sample_data, render_pdf
 
 
 def run_sample():

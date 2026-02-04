@@ -1,6 +1,6 @@
 import pathlib
 
-from pdfgen.cli import _build_fonts_conf
+from pdfgen_juanipis.cli import _build_fonts_conf
 
 
 def test_build_fonts_conf(tmp_path):

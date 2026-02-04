@@ -9,8 +9,8 @@ import fitz
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from pdfgen.pagination import LayoutConfig, Paginator
-from pdfgen.render import FONTS_CONF, render_pdf, _build_pages_from_sections
+from pdfgen_juanipis.pagination import LayoutConfig, Paginator
+from pdfgen_juanipis.render import FONTS_CONF, render_pdf, _build_pages_from_sections
 
 CSS_PATH = ROOT / "template" / "boletin.css"
 OUTPUT_DIR = ROOT / "stress_outputs"
@@ -46,8 +46,8 @@ def make_text(words, sentence_len=14):
 
 
 def build_theme():
-    banner = str((ROOT / "src" / "pdfgen" / "assets" / "banner.png").resolve())
-    logo = str((ROOT / "src" / "pdfgen" / "assets" / "logo.png").resolve())
+    banner = str((ROOT / "src" / "pdfgen_juanipis" / "assets" / "banner.png").resolve())
+    logo = str((ROOT / "src" / "pdfgen_juanipis" / "assets" / "logo.png").resolve())
     return {
         "header_banner_path": banner,
         "header_logo_path": logo,

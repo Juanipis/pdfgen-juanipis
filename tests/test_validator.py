@@ -1,6 +1,6 @@
 import pathlib
 
-from pdfgen.validator import validate_and_normalize
+from pdfgen_juanipis.validator import validate_and_normalize
 
 
 def test_table_padding_and_truncation(tmp_path):

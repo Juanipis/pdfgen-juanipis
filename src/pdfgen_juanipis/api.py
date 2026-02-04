@@ -2,7 +2,7 @@ import pathlib
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from pdfgen.render import render_pdf
+from pdfgen_juanipis.render import render_pdf
 
 
 @dataclass

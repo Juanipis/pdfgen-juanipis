@@ -1,4 +1,4 @@
-from pdfgen.render import _blocks_from_section
+from pdfgen_juanipis.render import _blocks_from_section
 
 
 def test_text_allows_inline_html():

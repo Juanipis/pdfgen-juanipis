@@ -1,4 +1,4 @@
-from pdfgen.pagination import _extract_ref_ids, _refs_from_html
+from pdfgen_juanipis.pagination import _extract_ref_ids, _refs_from_html
 
 
 def test_extract_ref_ids_simple():

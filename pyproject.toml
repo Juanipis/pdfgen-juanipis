@@ -31,7 +31,7 @@ Issues = "https://github.com/Juanipis/pdfgen-juanipis/issues"
 Source = "https://github.com/Juanipis/pdfgen-juanipis"
 
 [project.scripts]
-pdfgen = "pdfgen.cli:main"
+pdfgen-juanipis = "pdfgen_juanipis.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -40,7 +40,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-pdfgen = [
+pdfgen_juanipis = [
   "schema.json",
   "templates/*.css",
   "templates/*.jinja",

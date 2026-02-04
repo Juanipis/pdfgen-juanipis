@@ -1,7 +1,7 @@
 import pathlib
 import textwrap
 
-from pdfgen.cli import _load_data
+from pdfgen_juanipis.cli import _load_data
 
 
 def test_load_yaml(tmp_path):

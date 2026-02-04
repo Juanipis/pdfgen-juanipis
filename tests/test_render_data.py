@@ -1,4 +1,4 @@
-from pdfgen.render import build_sample_data, _build_pages_from_sections
+from pdfgen_juanipis.render import build_sample_data, _build_pages_from_sections
 
 
 def test_sample_data_structure():

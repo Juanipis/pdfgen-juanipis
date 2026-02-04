@@ -8,8 +8,8 @@ from weasyprint import HTML, CSS
 if __name__ == "__main__" and __package__ is None:
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
-from pdfgen.pagination import LayoutConfig, Paginator
-from pdfgen.validator import validate_and_normalize
+from pdfgen_juanipis.pagination import LayoutConfig, Paginator
+from pdfgen_juanipis.validator import validate_and_normalize
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = pathlib.Path(__file__).resolve().parent

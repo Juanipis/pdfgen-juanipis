@@ -1,4 +1,4 @@
-# pdfgen
+# pdfgen-juanipis
 
 Librería para generar PDFs a partir de data estructurada (HTML + WeasyPrint), con paginación, validación y soporte JSON/YAML.
 
@@ -8,12 +8,18 @@ Desde el repo:
 
 ```bash
 pip install -e .
+
+Desde PyPI:
+
+```bash
+pip install pdfgen-juanipis
+```
 ```
 
 ## Uso básico (Python)
 
 ```python
-from pdfgen.api import PDFGenConfig, PDFGen
+from pdfgen_juanipis.api import PDFGenConfig, PDFGen
 
 config = PDFGenConfig.from_root("/ruta/a/tu/proyecto")
 pdf = PDFGen(config)
@@ -24,7 +30,7 @@ pdf.render(data, output_path="salida.pdf", paginate=True, validate=True)
 Atajo:
 
 ```python
-from pdfgen.api import render_with_defaults
+from pdfgen_juanipis.api import render_with_defaults
 
 render_with_defaults(data, output_path="salida.pdf", root_dir="/ruta/a/tu/proyecto")
 ```
@@ -34,7 +40,7 @@ render_with_defaults(data, output_path="salida.pdf", root_dir="/ruta/a/tu/proyec
 Si no quieres escribir a disco:
 
 ```python
-from pdfgen.api import render_with_defaults_bytes
+from pdfgen_juanipis.api import render_with_defaults_bytes
 
 pdf_bytes = render_with_defaults_bytes(data, root_dir="/ruta/a/tu/proyecto")
 ```
@@ -44,20 +50,20 @@ pdf_bytes = render_with_defaults_bytes(data, root_dir="/ruta/a/tu/proyecto")
 Render (JSON o YAML):
 
 ```bash
-pdfgen render data.json salida.pdf --root /ruta/proyecto
-pdfgen render data.yaml salida.pdf
+pdfgen-juanipis render data.json salida.pdf --root /ruta/proyecto
+pdfgen-juanipis render data.yaml salida.pdf
 ```
 
 Validar (sin generar PDF):
 
 ```bash
-pdfgen validate data.yaml
+pdfgen-juanipis validate data.yaml
 ```
 
 Desde stdin (YAML por defecto):
 
 ```bash
-cat data.yaml | pdfgen render - salida.pdf
+cat data.yaml | pdfgen-juanipis render - salida.pdf
 ```
 
 Opciones útiles:
@@ -85,7 +91,7 @@ PDFGen(config).render(data, "salida.pdf")
 Opción B: directorio con `.ttf` desde CLI:
 
 ```bash
-pdfgen render data.json salida.pdf --fonts-dir /ruta/a/mis/fuentes
+pdfgen-juanipis render data.json salida.pdf --fonts-dir /ruta/a/mis/fuentes
 ```
 
 ### Colores/estilos rápidos
@@ -100,7 +106,7 @@ render_with_defaults(data, "salida.pdf", root_dir="/ruta", css_extra=css_extra)
 ### Template y CSS propios
 
 ```bash
-pdfgen render data.json salida.pdf --template-dir /ruta/template --css /ruta/template/boletin.css
+pdfgen-juanipis render data.json salida.pdf --template-dir /ruta/template --css /ruta/template/boletin.css
 ```
 
 ### Assets

@@ -4,7 +4,7 @@ import pathlib
 import sys
 import tempfile
 
-from pdfgen.api import PDFGen, PDFGenConfig
+from pdfgen_juanipis.api import PDFGen, PDFGenConfig
 
 
 def _build_fonts_conf(fonts_dir: pathlib.Path) -> pathlib.Path:
@@ -45,7 +45,7 @@ def _load_data(path: pathlib.Path, fmt: str | None = None):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="pdfgen CLI")
+    parser = argparse.ArgumentParser(description="pdfgen-juanipis CLI")
     sub = parser.add_subparsers(dest="command", required=True)
 
     render = sub.add_parser("render", help="Render a PDF from JSON/YAML")
@@ -70,7 +70,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "validate":
-        from pdfgen.validator import validate_and_normalize
+        from pdfgen_juanipis.validator import validate_and_normalize
 
         root_dir = pathlib.Path(args.root_dir)
         data = _load_data(pathlib.Path(args.input), fmt=args.fmt)

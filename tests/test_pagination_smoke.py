@@ -1,4 +1,4 @@
-from pdfgen.pagination import LayoutConfig, Paginator, split_html_into_chunks, _needs_keep_with_next
+from pdfgen_juanipis.pagination import LayoutConfig, Paginator, split_html_into_chunks, _needs_keep_with_next
 
 
 def test_split_html_chunks():
