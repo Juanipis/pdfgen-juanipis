@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add pyproject.toml CHANGELOG.md release-notes.md
+          git add pyproject.toml CHANGELOG.md
           git commit -m "chore(release): v${{ steps.bump.outputs.version }} [skip ci]"
           git push
 
