@@ -10,8 +10,14 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
-  { name = "ABACO" }
+  { name = "Juan Pablo Díaz Correa", email = "juanipis@gmail.com" }
 ]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+license-files = ["LICENSE"]
 dependencies = [
   "Jinja2==3.1.4",
   "WeasyPrint==59.0",
