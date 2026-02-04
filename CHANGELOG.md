@@ -4,6 +4,10 @@
 
 - _TBD_
 
+## 0.1.1 - 2026-02-04
+
+- Automated release.
+
 ## 0.1.0 - 2026-02-04
 
 - Initial package release with HTML-to-PDF rendering.
