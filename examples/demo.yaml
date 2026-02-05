@@ -1,0 +1,50 @@
+title: Informe demo con assets incluidos
+refs_catalog:
+  "1": "Fuente demo A (2024)"
+  "2": "Fuente demo B (2024)"
+
+theme:
+  header_banner_path: banner.png
+  header_banner_path_cont: banner-clean.png
+  header_logo_path: logo.png
+  title_line1: "Reporte demo"
+  title_line2: "Assets incluidos"
+  footer_site: "example.org"
+  footer_phone: "Contacto: +1 555 0100"
+
+sections:
+  - title: "I. Introduccion"
+    content:
+      - type: text
+        text:
+          - "Este es un PDF de prueba usando assets incluidos en el paquete [1]."
+          - "Puedes reemplazar las imagenes por tus propias rutas cuando quieras [2]."
+  - title: "II. Figuras"
+    content:
+      - type: figure
+        path: figure.png
+        caption: "Figura demo"
+      - type: figure
+        path: chart.png
+        caption: "Grafica demo"
+        wide: true
+  - title: "III. Tabla"
+    content:
+      - type: table
+        table:
+          groups:
+            - title: "Indicador A"
+              months: ["Ene", "Feb", "Mar"]
+            - title: "Indicador B"
+              months: ["Ene", "Feb", "Mar"]
+          rows:
+            - dep: "Zona 1"
+              vals: ["0.5", "0.6", "0.7", "1.2", "1.0", "1.4"]
+            - dep: "Zona 2"
+              vals: ["0.3", "0.4", "0.6", "0.9", "0.8", "1.1"]
+  - title: "IV. Mapa"
+    content:
+      - type: map_grid
+        items:
+          - path: map.png
+            label: "Mapa demo"

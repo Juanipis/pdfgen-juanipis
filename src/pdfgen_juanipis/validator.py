@@ -40,6 +40,46 @@ def validate_and_normalize(data: Dict[str, Any], root_dir: pathlib.Path) -> Tupl
     return normalized, warnings
 
 
+def normalize_assets(data: Dict[str, Any], root_dir: pathlib.Path) -> Dict[str, Any]:
+    normalized = copy.deepcopy(data)
+    assets_dir = root_dir / "assets"
+
+    if "pages" in normalized:
+        pages = normalized.get("pages", [])
+        if isinstance(pages, list):
+            for page in pages:
+                if isinstance(page, dict):
+                    _normalize_theme_paths(page, assets_dir, [])
+                    _normalize_blocks_assets(page.get("blocks", []), assets_dir)
+        return normalized
+
+    if "sections" in normalized:
+        _normalize_theme_paths(normalized.get("theme", {}), assets_dir, [])
+        sections = normalized.get("sections", [])
+        if isinstance(sections, list):
+            for section in sections:
+                if isinstance(section, dict):
+                    _normalize_blocks_assets(section.get("content", []), assets_dir)
+    return normalized
+
+
+def _normalize_blocks_assets(blocks: List[Dict[str, Any]], assets_dir: pathlib.Path) -> None:
+    if not isinstance(blocks, list):
+        return
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        block_type = block.get("type", "text")
+        if block_type == "figure":
+            _normalize_path(block, "path", assets_dir, [])
+        elif block_type == "map_grid":
+            items = block.get("items", [])
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        _normalize_path(item, "path", assets_dir, [])
+
+
 def _validate_pages(
     data: Dict[str, Any],
     assets_dir: pathlib.Path,

@@ -9,7 +9,7 @@ if __name__ == "__main__" and __package__ is None:
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from pdfgen_juanipis.pagination import LayoutConfig, Paginator
-from pdfgen_juanipis.validator import validate_and_normalize
+from pdfgen_juanipis.validator import normalize_assets, validate_and_normalize
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = pathlib.Path(__file__).resolve().parent
@@ -315,13 +315,15 @@ def render_pdf(
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     template = env.get_template(TEMPLATE_NAME)
 
-    if "sections" in data and "pages" not in data:
-        data = _build_pages_from_sections(data)
-
     if validate:
         data, warnings = validate_and_normalize(data, root_dir=root_dir)
         for warning in warnings:
             print(f"[validate] {warning}")
+    else:
+        data = normalize_assets(data, root_dir=root_dir)
+
+    if "sections" in data and "pages" not in data:
+        data = _build_pages_from_sections(data)
 
     layout = LayoutConfig()
     paginator = Paginator(layout, str(css_path), str(root_dir), fonts_conf_path=str(fonts_conf))
