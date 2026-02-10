@@ -39,6 +39,16 @@
         },
         "show_header_titles": {
           "type": "boolean"
+        },
+        "header_title_align": {
+          "type": "string",
+          "enum": ["left", "center", "right"],
+          "default": "center"
+        },
+        "header_subtitle_align": {
+          "type": "string",
+          "enum": ["left", "center", "right"],
+          "default": "center"
         }
       },
       "additionalProperties": true

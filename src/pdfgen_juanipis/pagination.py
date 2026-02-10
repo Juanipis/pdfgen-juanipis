@@ -47,6 +47,8 @@ class LayoutConfig:
     header_subtitle_gap_pt: float = 2.0
     safety_pad_pt: float = 6.0
     min_content_height_pt: float = 48.0
+    header_title_align: str = "center"
+    header_subtitle_align: str = "center"
 
     def to_template(self) -> Dict[str, float]:
         return {
@@ -249,7 +251,13 @@ class BlockMeasurer:
         if not refs:
             return 0.0
         line_height = 8.0 * 1.1
-        return 6.0 + len(refs) * line_height
+        # Estimate the number of rendered lines per ref.  At 8pt italic in
+        # ~442pt width roughly 70 characters fit per line.
+        chars_per_line = 70
+        total_lines = 0
+        for ref in refs:
+            total_lines += max(1, math.ceil(len(ref) / chars_per_line))
+        return 6.0 + total_lines * line_height
 
     def _estimate_notes_height(self, notes: List[str]) -> float:
         if not notes:
@@ -418,6 +426,13 @@ class Paginator:
         remaining_page_refs = self._distribute_page_refs_to_blocks(
             normalized_blocks, refs,
         )
+
+        # Redistribute block-level refs so each ref appears on the page that
+        # contains the matching <sup>N</sup> marker.  This handles cases
+        # where blocks were split during normalization or refs were attached
+        # to the wrong block upstream.
+        self._redistribute_block_refs(normalized_blocks)
+
         has_meta = bool(remaining_page_refs or notes)
 
         pages_build: List[PageBuild] = []
@@ -648,14 +663,9 @@ class Paginator:
             title_top + title_height + self.layout.header_subtitle_gap_pt,
         )
 
-        is_multi_line = title_height > self._header_single_line_height * 1.15
-        if is_multi_line:
+        # Use alignment from LayoutConfig (default: center)
+        if self.layout.header_title_align == "center":
             title_style = {
-                "left": self.layout.content_left_pt,
-                "width": self.layout.content_width_pt,
-                "align": "center",
-            }
-            subtitle_style = {
                 "left": self.layout.content_left_pt,
                 "width": self.layout.content_width_pt,
                 "align": "center",
@@ -664,12 +674,20 @@ class Paginator:
             title_style = {
                 "left": self.layout.header_title_left_pt,
                 "width": self.layout.header_title_width_pt,
-                "align": "left",
+                "align": self.layout.header_title_align,
             }
+
+        if self.layout.header_subtitle_align == "center":
+            subtitle_style = {
+                "left": self.layout.content_left_pt,
+                "width": self.layout.content_width_pt,
+                "align": "center",
+            }
+        else:
             subtitle_style = {
                 "left": self.layout.header_subtitle_left_pt,
                 "width": self.layout.header_subtitle_width_pt,
-                "align": "left",
+                "align": self.layout.header_subtitle_align,
             }
 
         header_bottom = max(
@@ -840,6 +858,76 @@ class Paginator:
                 continue
             remaining.append(ref)
         return remaining
+
+    def _redistribute_block_refs(
+        self,
+        normalized_blocks: List[BlockItem],
+    ) -> None:
+        """Redistribute block-level refs to the first block containing the
+        matching ``<sup>N</sup>`` marker.
+
+        After HTML blocks are split during normalization the refs may end up
+        on a chunk that does not contain the referencing ``<sup>`` marker.
+        This method collects all block-level refs, clears them, and
+        re-assigns each one to the correct block.
+
+        Non-numeric refs and refs that cannot be matched are placed on the
+        last block that originally held any refs (or the very last block as
+        a final fallback).
+        """
+        # Collect all block refs and remember the last block that had any.
+        all_refs: List[str] = []
+        last_ref_block_idx: Optional[int] = None
+        for idx, block in enumerate(normalized_blocks):
+            if block.refs:
+                all_refs.extend(block.refs)
+                last_ref_block_idx = idx
+
+        if not all_refs:
+            return
+
+        # Clear all block refs before re-assignment.
+        for block in normalized_blocks:
+            block.refs = []
+
+        fallback_idx = (
+            last_ref_block_idx
+            if last_ref_block_idx is not None
+            else len(normalized_blocks) - 1
+        )
+
+        # Build number→ref mapping (preserve order; first occurrence wins).
+        ref_by_number: Dict[str, str] = {}
+        non_numeric_refs: List[str] = []
+        for ref in all_refs:
+            num = _parse_ref_leading_number(ref)
+            if num is not None:
+                if num not in ref_by_number:
+                    ref_by_number[num] = ref
+            else:
+                non_numeric_refs.append(ref)
+
+        # Assign numeric refs to matching blocks.
+        assigned: set = set()
+        for block in normalized_blocks:
+            html = block.data.get("html", "")
+            if not html:
+                continue
+            for num in _extract_sup_numbers(html):
+                if num in ref_by_number and num not in assigned:
+                    block.refs.append(ref_by_number[num])
+                    assigned.add(num)
+
+        # Unmatched numeric refs go to the fallback block.
+        fallback_block = normalized_blocks[fallback_idx]
+        for ref in all_refs:
+            num = _parse_ref_leading_number(ref)
+            if num is not None and num not in assigned:
+                fallback_block.refs.append(ref)
+
+        # Non-numeric refs also go to the fallback block.
+        if non_numeric_refs:
+            fallback_block.refs.extend(non_numeric_refs)
 
     def _split_table_block(self, block: Dict[str, Any], max_height_pt: float) -> List[Dict[str, Any]]:
         if block.get("type") != "table":

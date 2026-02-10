@@ -306,6 +306,7 @@ def render_pdf(
     css_extra=None,
     root_dir=None,
     output_bytes=False,
+    dpi=192,
 ):
     root_dir = pathlib.Path(root_dir) if root_dir else ROOT
     template_dir = pathlib.Path(template_dir) if template_dir else TEMPLATE_DIR
@@ -327,7 +328,13 @@ def render_pdf(
     if "sections" in data and "pages" not in data:
         data = _build_pages_from_sections(data)
 
-    layout = LayoutConfig()
+    # Build LayoutConfig from theme overrides (if any)
+    _layout_kw = {}
+    _theme = data.get("theme") or {}
+    for _key in ("header_title_align", "header_subtitle_align"):
+        if _key in _theme:
+            _layout_kw[_key] = str(_theme[_key])
+    layout = LayoutConfig(**_layout_kw)
     paginator = Paginator(layout, str(css_path), str(root_dir), fonts_conf_path=str(fonts_conf))
     if paginate:
         data["pages"] = paginator.paginate(data["pages"])
@@ -339,12 +346,15 @@ def render_pdf(
     if css_extra:
         stylesheets.append(CSS(string=str(css_extra)))
 
+    weasyprint_options = {"dpi": dpi}
     if output_bytes or output_path is None:
         return HTML(string=html, base_url=str(root_dir)).write_pdf(
-            stylesheets=stylesheets
+            stylesheets=stylesheets, **weasyprint_options
         )
 
-    HTML(string=html, base_url=str(root_dir)).write_pdf(output_path, stylesheets=stylesheets)
+    HTML(string=html, base_url=str(root_dir)).write_pdf(
+        output_path, stylesheets=stylesheets, **weasyprint_options
+    )
     return None
 
     print(f"Wrote {output_path}")

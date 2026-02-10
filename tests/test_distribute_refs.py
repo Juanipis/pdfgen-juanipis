@@ -237,3 +237,95 @@ def test_paginator_distributes_refs_across_pages(tmp_path):
         "Both refs should NOT be lumped on the last page; "
         f"ref1 on pages {pages_with_ref1}, ref2 on pages {pages_with_ref2}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for _redistribute_block_refs
+# ---------------------------------------------------------------------------
+
+
+def test_redistribute_moves_refs_to_matching_block(tmp_path):
+    """Block-level refs should be moved to the block containing the
+    corresponding <sup>N</sup> marker."""
+    layout = LayoutConfig()
+    css = tmp_path / "dummy.css"
+    css.write_text(".content { font-size: 12pt; }")
+    paginator = Paginator(layout, str(css), str(tmp_path))
+
+    blocks = [
+        _make_block('<p>Parrafo con<sup>1</sup> referencia</p>'),
+        _make_block('<p>Parrafo intermedio sin notas</p>'),
+        # All refs incorrectly on the last block (simulates old behaviour)
+        _make_block(
+            '<p>Parrafo con<sup>2</sup> referencia</p>',
+            refs=["1 Fuente DANE", "2 Fuente INS"],
+        ),
+    ]
+
+    paginator._redistribute_block_refs(blocks)
+
+    assert blocks[0].refs == ["1 Fuente DANE"]
+    assert blocks[1].refs == []
+    assert blocks[2].refs == ["2 Fuente INS"]
+
+
+def test_redistribute_unmatched_refs_go_to_fallback(tmp_path):
+    """Refs that cannot be matched to any <sup> go to the last block that
+    originally held refs."""
+    layout = LayoutConfig()
+    css = tmp_path / "dummy.css"
+    css.write_text(".content { font-size: 12pt; }")
+    paginator = Paginator(layout, str(css), str(tmp_path))
+
+    blocks = [
+        _make_block('<p>Parrafo con<sup>1</sup></p>'),
+        _make_block(
+            '<p>Texto sin sups</p>',
+            refs=["1 Fuente A", "99 Fuente huerfana"],
+        ),
+    ]
+
+    paginator._redistribute_block_refs(blocks)
+
+    assert blocks[0].refs == ["1 Fuente A"]
+    # Unmatched ref stays on the last block that had refs (block index 1)
+    assert blocks[1].refs == ["99 Fuente huerfana"]
+
+
+def test_redistribute_noop_when_no_refs(tmp_path):
+    """When no blocks have refs, redistribution is a no-op."""
+    layout = LayoutConfig()
+    css = tmp_path / "dummy.css"
+    css.write_text(".content { font-size: 12pt; }")
+    paginator = Paginator(layout, str(css), str(tmp_path))
+
+    blocks = [
+        _make_block('<p>Sin refs</p>'),
+        _make_block('<p>Tampoco</p>'),
+    ]
+
+    paginator._redistribute_block_refs(blocks)
+
+    assert blocks[0].refs == []
+    assert blocks[1].refs == []
+
+
+def test_redistribute_non_numeric_refs_to_fallback(tmp_path):
+    """Non-numeric refs go to the fallback block."""
+    layout = LayoutConfig()
+    css = tmp_path / "dummy.css"
+    css.write_text(".content { font-size: 12pt; }")
+    paginator = Paginator(layout, str(css), str(tmp_path))
+
+    blocks = [
+        _make_block('<p>Con<sup>1</sup></p>'),
+        _make_block(
+            '<p>Texto</p>',
+            refs=["1 Fuente A", "Nota sin numero"],
+        ),
+    ]
+
+    paginator._redistribute_block_refs(blocks)
+
+    assert blocks[0].refs == ["1 Fuente A"]
+    assert blocks[1].refs == ["Nota sin numero"]
