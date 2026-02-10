@@ -252,6 +252,8 @@ def _blocks_from_section(section):
 
         if item.get("refs"):
             block["refs"] = item.get("refs")
+        if item.get("footer_notes"):
+            block["footer_notes"] = item.get("footer_notes")
         blocks.append(block)
 
     if section.get("refs") and blocks:

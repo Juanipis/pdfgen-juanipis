@@ -387,3 +387,85 @@ html, body {
   font-weight: 700;
   margin-top: 4pt;
 }
+
+/* Superscript (footnote markers) */
+sup {
+  font-size: 8pt;
+  vertical-align: super;
+  line-height: 0;
+}
+
+/* Inline figures (<figure> HTML element) */
+figure {
+  display: block;
+  max-width: 100%;
+  margin: 8pt auto 4pt;
+}
+
+figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+figcaption {
+  font-size: 9pt;
+  font-style: italic;
+  color: #555555;
+  text-align: center;
+  margin-top: 4pt;
+  margin-bottom: 6pt;
+}
+
+figcaption .figure-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+figure.figure-full {
+  text-align: center;
+  clear: both;
+}
+
+figure.figure-left {
+  float: left;
+  width: 42%;
+  margin: 4pt 12pt 8pt 0;
+}
+
+figure.figure-right {
+  float: right;
+  width: 42%;
+  margin: 4pt 0 8pt 12pt;
+}
+
+figure.figure-column {
+  width: 100%;
+}
+
+/* Lists */
+ul, ol {
+  margin: 6pt 0;
+  padding-left: 18pt;
+}
+
+li {
+  margin: 3pt 0;
+  line-height: 1.2;
+}
+
+/* Inline footnote paragraphs (used by bulletin HTML before extraction) */
+p.footnote {
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #555555;
+  margin: 6pt 0 3pt 0;
+  padding-left: 8pt;
+  border-left: 1.5pt solid #cccccc;
+}
+
+p.footnote sup {
+  font-weight: bold;
+  margin-right: 3pt;
+}

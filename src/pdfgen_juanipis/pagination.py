@@ -411,6 +411,15 @@ class Paginator:
 
         refs_catalog = page.get("refs_catalog", {})
         normalized_blocks = self._normalize_blocks(blocks, min_page_height, refs_catalog)
+
+        # Distribute page-level refs to blocks that contain matching <sup>
+        # markers.  After this step only unmatched refs remain page-level and
+        # will be rendered on the last physical page as a fallback.
+        remaining_page_refs = self._distribute_page_refs_to_blocks(
+            normalized_blocks, refs,
+        )
+        has_meta = bool(remaining_page_refs or notes)
+
         pages_build: List[PageBuild] = []
         idx = 0
         page_idx = 0
@@ -545,6 +554,7 @@ class Paginator:
                         header_subtitle_style if show_header_titles else header_subtitle_style_other
                     ),
                     show_header_titles=show_header_titles,
+                    page_level_refs=remaining_page_refs,
                 )
             )
 
@@ -563,11 +573,19 @@ class Paginator:
         header_title_style: Dict[str, float],
         header_subtitle_style: Dict[str, float],
         show_header_titles: bool,
+        page_level_refs: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         refs = list(build.refs)
         notes = list(build.notes)
         if include_meta:
-            refs.extend(source_page.get("refs", []))
+            # Use the (possibly reduced) page-level refs when available;
+            # fall back to the original source page refs for backwards
+            # compatibility.
+            refs.extend(
+                page_level_refs
+                if page_level_refs is not None
+                else source_page.get("refs", [])
+            )
             notes.extend(source_page.get("footer_notes", []))
 
         banner_path = source_page["header_banner_path"]
@@ -772,6 +790,56 @@ class Paginator:
                         )
                     )
         return normalized
+
+    def _distribute_page_refs_to_blocks(
+        self,
+        normalized_blocks: List[BlockItem],
+        page_refs: List[str],
+    ) -> List[str]:
+        """Distribute page-level refs to blocks that reference them via ``<sup>`` markers.
+
+        For each ref whose text starts with a number N (e.g. ``"1 DANE ..."``),
+        the method scans every block's HTML for ``<sup>N</sup>``.  When a match
+        is found the ref is attached to that block so the paginator renders it
+        on the same physical page.
+
+        Returns the list of refs that could **not** be matched to any block
+        (these remain page-level and will be placed on the last page as a
+        fallback).
+        """
+        if not page_refs:
+            return []
+
+        # Build number → ref mapping (first occurrence wins if duplicated numbers)
+        ref_by_number: Dict[str, str] = {}
+        for ref in page_refs:
+            num = _parse_ref_leading_number(ref)
+            if num is not None and num not in ref_by_number:
+                ref_by_number[num] = ref
+
+        if not ref_by_number:
+            return list(page_refs)
+
+        assigned_numbers: set = set()
+
+        for block in normalized_blocks:
+            html = block.data.get("html", "")
+            if not html:
+                continue
+            sup_numbers = _extract_sup_numbers(html)
+            for num in sup_numbers:
+                if num in ref_by_number and num not in assigned_numbers:
+                    block.refs.append(ref_by_number[num])
+                    assigned_numbers.add(num)
+
+        # Return unmatched refs preserving original order
+        remaining: List[str] = []
+        for ref in page_refs:
+            num = _parse_ref_leading_number(ref)
+            if num is not None and num in assigned_numbers:
+                continue
+            remaining.append(ref)
+        return remaining
 
     def _split_table_block(self, block: Dict[str, Any], max_height_pt: float) -> List[Dict[str, Any]]:
         if block.get("type") != "table":
@@ -998,6 +1066,17 @@ def split_html_into_chunks(html: str) -> List[str]:
 def _needs_keep_with_next(html: str) -> bool:
     lowered = html.lower()
     return "section-title" in lowered or "section-title-serif" in lowered or "section-subtitle" in lowered
+
+
+def _extract_sup_numbers(html: str) -> List[str]:
+    """Extract numbers from ``<sup>N</sup>`` markers in *html*."""
+    return re.findall(r"<sup[^>]*>\s*(\d+)\s*</sup>", html, re.IGNORECASE)
+
+
+def _parse_ref_leading_number(ref: str) -> Optional[str]:
+    """Return the leading number from a ref string like ``'1 DANE ...'``."""
+    match = re.match(r"^\s*(\d+)\s", ref)
+    return match.group(1) if match else None
 
 
 def _refs_from_html(html: str, refs_catalog: Dict[str, str]) -> List[str]:
