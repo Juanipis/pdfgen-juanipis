@@ -4,6 +4,10 @@
 
 - _TBD_
 
+## 0.1.6 - 2026-02-10
+
+- Automated release.
+
 ## 0.1.5 - 2026-02-05
 
 - Automated release.
