@@ -41,7 +41,7 @@ class LayoutConfig:
     footer_contact_bottom_pt: float = 32.0
     footer_page_bottom_pt: float = 134.0
     footer_meta_bottom_pt: float = 70.0
-    footer_meta_gap_pt: float = 6.0
+    footer_meta_gap_pt: float = 8.0
     header_gap_pt: float = 6.0
     intro_gap_pt: float = 12.0
     header_subtitle_gap_pt: float = 2.0
@@ -155,7 +155,11 @@ class BlockMeasurer:
         height = self._measure_with_weasyprint(html, "probe")
         if height is None:
             height = self._estimate_refs_height(refs) + self._estimate_notes_height(notes)
-        return height
+        # Keep this conservative: small font metric differences (fallbacks,
+        # italics, accented glyphs) can under-measure footer refs and cause
+        # visual overlap with the content block in the final render.
+        safety_buffer = 8.0 + (1.5 if refs else 0.0)
+        return height + safety_buffer
 
     def measure_footer_contact(self, site: str, phone: str) -> float:
         html = f"<div id=\"probe\" class=\"footer-contact\"><div>{site}</div><div>{phone}</div></div>"

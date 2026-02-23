@@ -108,6 +108,15 @@ html, body {
   line-height: 1.15;
 }
 
+.header-title em,
+.header-title i,
+.header-subtitle em,
+.header-subtitle i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
+}
+
 .header-subtitle {
   position: absolute;
   top: 90.77pt;
@@ -149,6 +158,13 @@ html, body {
   font-size: 14.04pt;
   font-weight: 700;
   color: #000000;
+}
+
+.content .section-title em,
+.content .section-title i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
 }
 
 .content .section-title .roman {
@@ -238,7 +254,7 @@ html, body {
   line-height: 1.0;
   text-align: center;
   overflow-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
 }
 
 .tabla-abaco thead th {
@@ -286,14 +302,17 @@ html, body {
   font-family: 'Calibri', sans-serif;
   font-style: italic;
   font-size: 8pt;
-  line-height: 1.1;
+  line-height: 1.15;
   color: #000000;
+  margin-bottom: 1pt;
+  overflow-wrap: anywhere;
 }
 
 .footer-notes {
   font-size: 8pt;
-  line-height: 1.1;
+  line-height: 1.15;
   color: #000000;
+  overflow-wrap: anywhere;
 }
 
 .footer-contact {
@@ -367,7 +386,6 @@ html, body {
 
 .map-grid {
   display: flex;
-  gap: 10pt;
   justify-content: space-between;
   margin: 6pt 0 2pt;
 }
@@ -375,6 +393,11 @@ html, body {
 .map-item {
   width: 31%;
   text-align: center;
+  margin-right: 10pt;
+}
+
+.map-item:last-child {
+  margin-right: 0;
 }
 
 .map-img {
