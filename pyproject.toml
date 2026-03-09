@@ -19,8 +19,8 @@ classifiers = [
 license-files = ["LICENSE"]
 dependencies = [
   "Jinja2==3.1.4",
-  "WeasyPrint==59.0",
-  "pydyf==0.10.0",
+  "WeasyPrint>=66.0",
+  "pydyf>=0.11.0",
   "jsonschema==4.23.0",
   "PyYAML==6.0.2"
 ]
