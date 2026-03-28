@@ -1110,6 +1110,55 @@ class Paginator:
             return self.layout.min_content_height_pt
         return content_height
 
+def _split_single_element_by_words(html: str, target_words: int = 80) -> List[str]:
+    """Split a single HTML element into multiple elements by word count.
+
+    Detects the outermost wrapping tag (e.g. ``<p ...>``) and splits the inner
+    text content into chunks of approximately *target_words* words each,
+    re-wrapping every chunk in the same tag.  Inline HTML tags (``<em>``,
+    ``<strong>``, ``<sup>``, ``<a>``, etc.) inside the element are preserved
+    in whichever chunk they fall into.
+    """
+    # Match the outermost opening and closing tag.
+    open_match = re.match(r"^(\s*<(\w+)(?:\s[^>]*)?>)", html, re.IGNORECASE | re.DOTALL)
+    if not open_match:
+        return [html]
+    open_tag = open_match.group(1)
+    tag_name = open_match.group(2)
+    close_tag_pattern = re.compile(rf"(</\s*{re.escape(tag_name)}\s*>\s*)$", re.IGNORECASE)
+    close_match = close_tag_pattern.search(html)
+    if not close_match:
+        return [html]
+    close_tag = close_match.group(1)
+    inner = html[open_match.end(): close_match.start()]
+
+    # Split inner HTML by word boundaries while keeping HTML tags intact.
+    # Tokens are either HTML tags or whitespace-separated words.
+    tokens = re.findall(r"<[^>]+>|[^\s<]+|\s+", inner)
+
+    chunks: List[str] = []
+    current_tokens: List[str] = []
+    word_count = 0
+    for token in tokens:
+        current_tokens.append(token)
+        # Count only non-tag, non-whitespace tokens as words.
+        if not token.startswith("<") and token.strip():
+            word_count += 1
+        if word_count >= target_words:
+            chunk_inner = "".join(current_tokens).strip()
+            if chunk_inner:
+                chunks.append(f"{open_tag}{chunk_inner}{close_tag}")
+            current_tokens = []
+            word_count = 0
+    # Remaining tokens.
+    if current_tokens:
+        chunk_inner = "".join(current_tokens).strip()
+        if chunk_inner:
+            chunks.append(f"{open_tag}{chunk_inner}{close_tag}")
+
+    return chunks if len(chunks) > 1 else [html]
+
+
 def split_html_into_chunks(html: str) -> List[str]:
     lowered = html.lower()
     for tag in ("p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6"):
@@ -1151,6 +1200,12 @@ def split_html_into_chunks(html: str) -> List[str]:
             chunks = [f"<p>{s.strip()}</p>" for s in sentences if s.strip()]
             if len(chunks) > 1:
                 return chunks
+
+    # Last resort: split a single large element by words so that oversized
+    # blocks can still be distributed across pages.
+    word_chunks = _split_single_element_by_words(html)
+    if len(word_chunks) > 1:
+        return word_chunks
 
     return [html]
 

@@ -1,4 +1,10 @@
-from pdfgen_juanipis.pagination import LayoutConfig, Paginator, split_html_into_chunks, _needs_keep_with_next
+from pdfgen_juanipis.pagination import (
+    LayoutConfig,
+    Paginator,
+    split_html_into_chunks,
+    _needs_keep_with_next,
+    _split_single_element_by_words,
+)
 
 
 def test_split_html_chunks():
@@ -11,6 +17,50 @@ def test_split_html_chunks_long_paragraph():
     html = "<p>" + "Frase. " * 120 + "</p>"
     chunks = split_html_into_chunks(html)
     assert len(chunks) > 1
+
+
+def test_split_single_element_by_words_basic():
+    """A single <p> with many words should be split into multiple <p> tags."""
+    html = "<p>" + " yes" * 300 + "</p>"
+    chunks = _split_single_element_by_words(html, target_words=80)
+    assert len(chunks) >= 3
+    for chunk in chunks:
+        assert chunk.startswith("<p>")
+        assert chunk.endswith("</p>")
+
+
+def test_split_single_element_preserves_inline_tags():
+    """Inline tags like <strong> and <em> should be preserved in chunks."""
+    html = "<p>" + " word" * 50 + " <strong>bold</strong>" + " word" * 50 + "</p>"
+    chunks = _split_single_element_by_words(html, target_words=40)
+    assert len(chunks) >= 2
+    combined = "".join(chunks)
+    assert "<strong>bold</strong>" in combined
+
+
+def test_split_single_element_preserves_attributes():
+    """The opening tag attributes (class, style, etc.) should be preserved."""
+    html = '<p class="intro" style="color:red;">' + " word" * 200 + "</p>"
+    chunks = _split_single_element_by_words(html, target_words=80)
+    assert len(chunks) >= 2
+    for chunk in chunks:
+        assert chunk.startswith('<p class="intro" style="color:red;">')
+        assert chunk.endswith("</p>")
+
+
+def test_split_chunks_fallback_to_word_split():
+    """split_html_into_chunks should use word splitting as last resort for
+    single-element HTML without sentences (no periods)."""
+    html = "<p>" + " yes" * 500 + "</p>"
+    chunks = split_html_into_chunks(html)
+    assert len(chunks) > 1, "Expected word-based fallback to split the block"
+
+
+def test_split_short_paragraph_not_split():
+    """A short paragraph should not be split."""
+    html = "<p>Short text.</p>"
+    chunks = _split_single_element_by_words(html, target_words=80)
+    assert len(chunks) == 1
 
 
 def test_keep_with_next_detects_titles():
