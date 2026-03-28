@@ -54,14 +54,23 @@
     </div>
   {% endmacro %}
 
-  {% for page in pages %}
-  <div class="page">
-    <img class="header-banner" src="{{ page.header_banner_path_cont if not page.show_header_titles and page.header_banner_path_cont is defined else page.header_banner_path }}" alt="Banner" />
-    <img class="header-logo" src="{{ page.header_logo_path }}" alt="Logo" />
+  {# ── Fixed elements: repeat on every page via CSS position:fixed ────── #}
+  {% set first_page = pages[0] if pages else {} %}
+  <img class="header-banner" src="{{ first_page.header_banner_path or '' }}" alt="Banner" />
+  <img class="header-logo" src="{{ first_page.header_logo_path or '' }}" alt="Logo" />
 
+  <div class="footer-contact">
+    <div>{{ first_page.footer_site or '' }}</div>
+    <div>{{ first_page.footer_phone or '' }}</div>
+  </div>
+
+  {# ── Flowing content: WeasyPrint paginates this naturally ─────────── #}
+  {% for page in pages %}
+
+    {# Show header titles only on the first logical page #}
     {% if page.show_header_titles %}
-    <div class="header-title" style="top: {{ page.header_title_top | default(73.7) }}pt; left: {{ page.header_title_left | default(94.7) }}pt; width: {{ page.header_title_width | default(430) }}pt; text-align: {{ page.header_title_align | default('left') }};">{{ page.title_line1 }}</div>
-    <div class="header-subtitle" style="top: {{ page.header_subtitle_top | default(90.77) }}pt; left: {{ page.header_subtitle_left | default(260.8) }}pt; width: {{ page.header_subtitle_width | default(220) }}pt; text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
+    <div class="header-title" style="text-align: {{ page.header_title_align | default('left') }};">{{ page.title_line1 }}</div>
+    <div class="header-subtitle" style="text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
     {% endif %}
 
     {% if page.cover %}
@@ -79,9 +88,12 @@
       {% endif %}
     </div>
     {% else %}
-    <div class="intro" style="top: {{ page.intro_top | default(layout.intro_top) }}pt;">{{ page.intro }}</div>
 
-    <div class="content" style="top: {{ page.content_top | default(layout.content_top) }}pt;">
+    {% if page.intro %}
+    <div class="intro">{{ page.intro }}</div>
+    {% endif %}
+
+    <div class="content">
       {% for block in page.blocks %}
       <div class="content-block">
         {% if block.type == "html" %}
@@ -92,10 +104,12 @@
       </div>
       {% endfor %}
     </div>
+
     {% endif %}
 
+    {# Refs and footer notes flow inline after content #}
     {% if not page.cover and (page.refs or page.footer_notes) %}
-    <div class="footer-meta" style="bottom: {{ page.footer_meta_bottom | default(70) }}pt;">
+    <div class="footer-meta">
       {% if page.refs %}
       <div class="refs">
         <div class="refs-line"></div>
@@ -116,14 +130,9 @@
     {% endif %}
 
     {% if page.page_number %}
-    <div class="footer-page">{{ page.page_number }}</div>
+    <div class="footer-page">{{ page.page_number_label or page.page_number }}</div>
     {% endif %}
 
-    <div class="footer-contact">
-      <div>{{ page.footer_site }}</div>
-      <div>{{ page.footer_phone }}</div>
-    </div>
-  </div>
   {% endfor %}
 </body>
 </html>

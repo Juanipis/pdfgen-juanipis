@@ -1,6 +1,18 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   pdfgen-juanipis — boletin.css
+   CSS Paged Media layout: content flows naturally, WeasyPrint handles
+   page breaks.  Header/footer use position:fixed to repeat on every page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @page {
   size: Letter;
-  margin: 0;
+  /* Reserve space for the fixed header and footer so content doesn't overlap */
+  margin: 100pt 85pt 70pt 85pt;
+}
+
+/* First page may have titles below the banner, so give it more top margin */
+@page :first {
+  margin-top: 130pt;
 }
 
 :root {
@@ -8,6 +20,8 @@
   --orange-footer: #f58534;
   --text: #000000;
 }
+
+/* ── Fonts ─────────────────────────────────────────────────────────────── */
 
 @font-face {
   font-family: 'Calibri';
@@ -58,6 +72,8 @@
   font-style: normal;
 }
 
+/* ── Base ──────────────────────────────────────────────────────────────── */
+
 html, body {
   margin: 0;
   padding: 0;
@@ -66,46 +82,35 @@ html, body {
   color: var(--text);
 }
 
-.page {
-  width: 8.5in;
-  height: 11in;
-  position: relative;
-  background: #ffffff;
-  overflow: hidden;
-  page-break-after: always;
-}
-
-.page:last-child {
-  page-break-after: auto;
-}
+/* ── Fixed header elements (repeat on every page in paged media) ──────── */
 
 .header-banner {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left: 0.35pt;
-  width: 817.5pt;
+  left: 0;
+  width: 612pt;
   height: 79.5pt;
   object-fit: cover;
 }
 
 .header-logo {
-  position: absolute;
+  position: fixed;
   top: 13.95pt;
   left: 498.25pt;
   width: 81.41pt;
   height: 36.75pt;
+  object-fit: contain;
 }
 
+/* ── Header titles (first page only, positioned absolutely within flow) ── */
+
 .header-title {
-  position: absolute;
-  top: 73.7pt;
-  left: 94.7pt;
-  width: 430pt;
   font-family: 'Calibri', sans-serif;
   font-size: 14pt;
   font-weight: 700;
   color: var(--blue-title);
   line-height: 1.15;
+  margin-bottom: 2pt;
 }
 
 .header-title em,
@@ -118,31 +123,25 @@ html, body {
 }
 
 .header-subtitle {
-  position: absolute;
-  top: 90.77pt;
-  left: 260.8pt;
-  width: 220pt;
   font-family: 'Calibri', sans-serif;
   font-size: 14pt;
   font-weight: 700;
   color: var(--blue-title);
   line-height: 1.15;
+  margin-bottom: 6pt;
 }
+
+/* ── Intro (short text right below titles on first page) ─────────────── */
 
 .intro {
-  position: absolute;
-  top: 122.18pt;
-  left: 85.1pt;
-  width: 444pt;
   font-size: 12pt;
   line-height: 1.0;
+  margin-bottom: 8pt;
 }
 
+/* ── Content (normal document flow — WeasyPrint paginates naturally) ──── */
+
 .content {
-  position: absolute;
-  top: 150pt;
-  left: 85.1pt;
-  width: 444pt;
   font-size: 12pt;
   line-height: 1.1;
 }
@@ -158,6 +157,8 @@ html, body {
   font-size: 14.04pt;
   font-weight: 700;
   color: #000000;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .content .section-title em,
@@ -195,13 +196,12 @@ html, body {
   font-size: 12pt;
 }
 
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+
 .cover {
-  position: absolute;
-  top: 170pt;
-  left: 85.1pt;
-  width: 444pt;
   text-align: center;
   color: var(--blue-title);
+  margin-top: 40pt;
 }
 
 .cover-title {
@@ -223,6 +223,8 @@ html, body {
   line-height: 1.35;
 }
 
+/* ── Charts / Images ──────────────────────────────────────────────────── */
+
 .chart {
   width: 100%;
   height: auto;
@@ -236,6 +238,8 @@ html, body {
   color: #333333;
   margin-bottom: 8pt;
 }
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
 
 .tabla-abaco {
   border-collapse: collapse;
@@ -281,11 +285,12 @@ html, body {
 .tabla-md { width: 532.66pt; }
 .tabla-sm { width: 532.66pt; }
 
+/* ── Footer meta (refs / notes) — rendered inline at end of content ──── */
+
 .footer-meta {
-  position: absolute;
-  left: 85.1pt;
-  right: 85.1pt;
-  bottom: 70pt;
+  margin-top: 12pt;
+  border-top: 0.5pt solid #cccccc;
+  padding-top: 6pt;
 }
 
 .refs {
@@ -315,11 +320,13 @@ html, body {
   overflow-wrap: anywhere;
 }
 
+/* ── Fixed footer contact (repeats on every page) ─────────────────────── */
+
 .footer-contact {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
-  bottom: 32pt;
+  bottom: 20pt;
   text-align: center;
   font-family: 'Century Gothic', sans-serif;
   font-weight: 700;
@@ -328,13 +335,15 @@ html, body {
   line-height: 1.0;
 }
 
+/* ── Page number ──────────────────────────────────────────────────────── */
+
 .footer-page {
-  position: absolute;
-  left: 85.1pt;
-  bottom: 134pt;
   font-size: 6.5pt;
   color: #000000;
+  margin-top: 4pt;
 }
+
+/* ── Report titles ────────────────────────────────────────────────────── */
 
 .report-title {
   font-size: 20pt;
@@ -359,6 +368,8 @@ html, body {
   text-align: center;
   margin-bottom: 8pt;
 }
+
+/* ── Figures ───────────────────────────────────────────────────────────── */
 
 .figure {
   display: block;
@@ -411,14 +422,14 @@ html, body {
   margin-top: 4pt;
 }
 
-/* Superscript (footnote markers) */
+/* ── Superscript (footnote markers) ───────────────────────────────────── */
 sup {
   font-size: 8pt;
   vertical-align: super;
   line-height: 0;
 }
 
-/* Inline figures (<figure> HTML element) */
+/* ── Inline figures (<figure> HTML element) ───────────────────────────── */
 figure {
   display: block;
   max-width: 100%;
@@ -467,7 +478,7 @@ figure.figure-column {
   width: 100%;
 }
 
-/* Lists */
+/* ── Lists ─────────────────────────────────────────────────────────────── */
 ul, ol {
   margin: 6pt 0;
   padding-left: 18pt;
@@ -478,7 +489,7 @@ li {
   line-height: 1.2;
 }
 
-/* Inline footnote paragraphs (used by bulletin HTML before extraction) */
+/* ── Inline footnote paragraphs ───────────────────────────────────────── */
 p.footnote {
   font-size: 8pt;
   line-height: 1.1;
