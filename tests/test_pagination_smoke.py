@@ -24,8 +24,12 @@ def test_split_single_element_by_words_basic():
     html = "<p>" + " yes" * 300 + "</p>"
     chunks = _split_single_element_by_words(html, target_words=80)
     assert len(chunks) >= 3
+    # First chunk keeps original tag; continuation chunks get margin-reset style.
+    assert chunks[0].startswith("<p>")
+    for chunk in chunks[1:]:
+        assert chunk.startswith("<p ")
+        assert "margin:0" in chunk
     for chunk in chunks:
-        assert chunk.startswith("<p>")
         assert chunk.endswith("</p>")
 
 
@@ -43,8 +47,13 @@ def test_split_single_element_preserves_attributes():
     html = '<p class="intro" style="color:red;">' + " word" * 200 + "</p>"
     chunks = _split_single_element_by_words(html, target_words=80)
     assert len(chunks) >= 2
+    # First chunk keeps original style; continuations prepend margin reset.
+    assert chunks[0].startswith('<p class="intro" style="color:red;">')
+    for chunk in chunks[1:]:
+        assert 'class="intro"' in chunk
+        assert "margin:0" in chunk
+        assert "color:red" in chunk
     for chunk in chunks:
-        assert chunk.startswith('<p class="intro" style="color:red;">')
         assert chunk.endswith("</p>")
 
 

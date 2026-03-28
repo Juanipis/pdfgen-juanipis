@@ -1136,6 +1136,25 @@ def _split_single_element_by_words(html: str, target_words: int = 80) -> List[st
     # Tokens are either HTML tags or whitespace-separated words.
     tokens = re.findall(r"<[^>]+>|[^\s<]+|\s+", inner)
 
+    # Build a continuation open tag that zeroes out margins so split chunks
+    # render as a single continuous text flow without visible paragraph gaps.
+    if re.search(r'\bstyle\s*=', open_tag, re.IGNORECASE):
+        # Append margin reset to existing style attribute.
+        cont_open_tag = re.sub(
+            r'(style\s*=\s*["\'])',
+            r'\1margin:0;padding:0;',
+            open_tag,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+    else:
+        # Inject a style attribute before the closing '>'.
+        cont_open_tag = re.sub(
+            r'\s*/?\s*>$',
+            ' style="margin:0;padding:0;">',
+            open_tag,
+        )
+
     chunks: List[str] = []
     current_tokens: List[str] = []
     word_count = 0
@@ -1147,14 +1166,17 @@ def _split_single_element_by_words(html: str, target_words: int = 80) -> List[st
         if word_count >= target_words:
             chunk_inner = "".join(current_tokens).strip()
             if chunk_inner:
-                chunks.append(f"{open_tag}{chunk_inner}{close_tag}")
+                # First chunk keeps original tag; subsequent use margin-reset tag.
+                tag = open_tag if not chunks else cont_open_tag
+                chunks.append(f"{tag}{chunk_inner}{close_tag}")
             current_tokens = []
             word_count = 0
     # Remaining tokens.
     if current_tokens:
         chunk_inner = "".join(current_tokens).strip()
         if chunk_inner:
-            chunks.append(f"{open_tag}{chunk_inner}{close_tag}")
+            tag = open_tag if not chunks else cont_open_tag
+            chunks.append(f"{tag}{chunk_inner}{close_tag}")
 
     return chunks if len(chunks) > 1 else [html]
 
