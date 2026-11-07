@@ -10,7 +10,7 @@ def test_config_from_root():
     config = PDFGenConfig.from_root(root)
     assert config.template_dir in {
         root / "template",
-        root / "src" / "pdfgen_juanipis" / "templates",
+        root / "src" / "pdfgen_juanipis" / "legacy" / "templates",
     }
     assert config.css_path.name == "boletin.css"
     assert config.fonts_conf is None or config.fonts_conf == root / "fonts.conf"

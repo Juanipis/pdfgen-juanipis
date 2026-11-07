@@ -1,6 +1,8 @@
 # pdfgen-juanipis
 
-HTML-to-PDF generator with pagination and validation, built on WeasyPrint and Jinja2.
+Editable HTML to paginated PDF (and Word), built on WeasyPrint and Jinja2.
+Since 0.2 the library is HTML-first (`HtmlRenderer`); the 0.1 structured-data
+API lives in `pdfgen_juanipis.legacy` and must keep working.
 
 ## Golden Rules
 
@@ -24,7 +26,14 @@ for table splitting, etc.) but **WeasyPrint is the actual layout engine**. A sin
 `<p>` with 10,000 words must flow across pages naturally without Python needing to
 split it.
 
-### 3. Template structure
+### 3. Only open fonts, no brands
+
+The repo is public. Bundle only fonts whose license allows redistribution,
+each next to its license and listed in `assets/fonts/FONTS.md`. Brand
+letterheads, logos and proprietary fonts live in their owner's template
+package, registered at runtime — never in this repo.
+
+### 4. Template structure
 
 ```
 <body>
@@ -47,24 +56,33 @@ split it.
 
 ```
 src/pdfgen_juanipis/
-  pagination.py    — Block measurer, paginator, HTML chunk splitting
-  render.py        — render_pdf() entry point, Jinja + WeasyPrint pipeline
-  validator.py     — Schema validation and data normalization
-  api.py           — Public API (PDFGenConfig, convenience functions)
-  templates/
-    boletin_template.html.jinja  — Jinja2 page template
-    boletin.css                  — CSS Paged Media stylesheet
-  assets/
-    fonts/         — Bundled TTF fonts
-    *.png          — Default banner/logo images
+  __init__.py      — lazy public API (new + legacy names)
+  options.py       — RenderOptions, Labels (every user-visible word)
+  contract.py      — render-contract directives, scan, numbering, text guard
+  packages.py      — template packages (letterhead) + PackageRegistry
+  fonts.py         — bundled fonts, isolated fontconfig
+  text.py          — foreign-script guard, number/percent binding
+  formats.py       — render_formats(): PDF + DOCX from one options object
+  docx_export.py   — Word exporter ([docx] extra)
+  pdf/
+    renderer.py    — HtmlRenderer (payload → Jinja → WeasyPrint + passes)
+    parsing.py     — HTML → sections / blocks / tables
+    pages.py       — sections → the single flowing page, footnote placement
+    passes.py      — post-layout passes (footnotes, figure gaps, lonely breaks)
+    visual_layout.py, images.py — figure sizing and image fitting
+  templates/       — report.html.jinja + report.css (HTML-first renderer)
+  packages/plain/  — the built-in neutral template package
+  assets/fonts/    — open fonts, one dir per family + license, FONTS.md
+  legacy/          — 0.1 API: render, api, pagination, validator, templates
+  render.py, api.py, pagination.py, validator.py — aliases of legacy modules
 ```
 
 ## Commands
 
 ```bash
-uv sync                          # Install dependencies
-uv run pytest -v                 # Run all tests
-uv run pytest tests/test_pagination_smoke.py -v  # Pagination tests only
+uv sync --extra dev --extra docx # Install dependencies
+uv run pytest -q                 # Run all tests
+uv run python scripts/parity_harness.py doc.html --compare other.pdf  # page count + text layer
 ```
 
 On macOS with Apple Silicon, WeasyPrint needs:
@@ -77,5 +95,7 @@ export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib
 
 - **WeasyPrint** >= 66.0 — CSS Paged Media PDF renderer
 - **Jinja2** — Template engine
-- **PyYAML** — Data input format
-- **jsonschema** — Payload validation
+- **lxml**, **Pillow** — HTML parsing, image fitting
+- **PyYAML** — Template package manifests, legacy data input
+- **jsonschema** — Legacy payload validation
+- **python-docx** — Word exporter (optional `[docx]` extra)

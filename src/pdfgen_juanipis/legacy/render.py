@@ -343,7 +343,7 @@ def render_pdf(
         if _key in _theme:
             _layout_kw[_key] = str(_theme[_key])
     layout = LayoutConfig(**_layout_kw)
-    paginator = Paginator(layout, str(css_path), str(root_dir), fonts_conf_path=str(fonts_conf))
+    paginator = Paginator(layout, str(css_path), str(root_dir), fonts_conf_path=str(fonts_conf) if fonts_conf else None)
     if paginate:
         data["pages"] = paginator.paginate(data["pages"])
     data["layout"] = layout.to_template()

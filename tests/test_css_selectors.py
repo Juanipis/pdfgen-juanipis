@@ -1,19 +1,33 @@
-"""Verify that boletin.css contains rules for all HTML elements used by
-the bulletin pipeline (sup, figure, figcaption, lists, footnotes)."""
+"""Verify that both stylesheets (the HTML-first report.css and the legacy
+boletin.css) carry rules for every HTML element the pipeline emits
+(sup, figure, figcaption, lists, footnotes)."""
 
 import pathlib
 
-CSS_PATH = (
-    pathlib.Path(__file__).resolve().parents[1]
-    / "src"
-    / "pdfgen_juanipis"
-    / "templates"
-    / "boletin.css"
-)
+import pytest
+
+PACKAGE = pathlib.Path(__file__).resolve().parents[1] / "src" / "pdfgen_juanipis"
+CSS_PATHS = [
+    PACKAGE / "templates" / "report.css",
+    PACKAGE / "legacy" / "templates" / "boletin.css",
+]
+
+
+@pytest.fixture(params=CSS_PATHS, ids=lambda p: p.name)
+def css_path(request):
+    return request.param
+
+
+_CURRENT = {}
+
+
+@pytest.fixture(autouse=True)
+def _bind(css_path):
+    _CURRENT["path"] = css_path
 
 
 def _css_content() -> str:
-    return CSS_PATH.read_text(encoding="utf-8")
+    return _CURRENT["path"].read_text(encoding="utf-8")
 
 
 def test_sup_selector():

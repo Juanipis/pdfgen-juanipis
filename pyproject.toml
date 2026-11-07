@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pdfgen-juanipis"
-version = "0.1.12"
-description = "HTML-to-PDF generator with pagination and validation"
+version = "0.2.0"
+description = "Editable HTML to paginated PDF (and Word) on WeasyPrint, with template packages and post-layout passes"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -18,11 +18,23 @@ classifiers = [
 ]
 license-files = ["LICENSE"]
 dependencies = [
-  "Jinja2==3.1.4",
+  "Jinja2>=3.1.4",
   "WeasyPrint>=66.0",
   "pydyf>=0.11.0",
-  "jsonschema==4.23.0",
-  "PyYAML==6.0.2"
+  "jsonschema>=4.23.0",
+  "PyYAML>=6.0.2",
+  "lxml>=5.0",
+  "Pillow>=10.0"
+]
+
+[project.optional-dependencies]
+docx = [
+  "python-docx>=1.1"
+]
+dev = [
+  "pytest>=8.3",
+  "pypdf>=4.0",
+  "python-docx>=1.1"
 ]
 
 [project.urls]
@@ -41,9 +53,18 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 pdfgen_juanipis = [
-  "schema.json",
   "templates/*.css",
   "templates/*.jinja",
-  "assets/fonts/*",
+  "packages/*/package.yml",
+  "packages/*/*.css",
+  "packages/*/assets/*",
+  "legacy/schema.json",
+  "legacy/templates/*.css",
+  "legacy/templates/*.jinja",
+  "assets/fonts/FONTS.md",
+  "assets/fonts/*/*",
   "assets/*.png"
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

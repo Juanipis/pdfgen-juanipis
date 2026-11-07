@@ -186,7 +186,7 @@ def test_paginator_distributes_refs_across_pages(tmp_path):
 
     # Build a long document with two sections that each have a footnote.
     # Fill enough text to force multiple physical pages.
-    long_text = "<p>" + ("Lorem ipsum. " * 80) + "</p>"
+    long_text = "<p>" + ("Lorem ipsum. " * 200) + "</p>"  # long enough for 2+ pages with any font
 
     blocks = [
         {"type": "html", "html": f'<p>Seccion 1 nota<sup>1</sup></p>{long_text}'},
