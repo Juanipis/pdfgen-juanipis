@@ -100,6 +100,9 @@ O por separado: `DocxRenderer(package, options).render(html, "informe.docx")`.
 | `isolate_fonts` | `True` | fontconfig solo ve las fuentes incluidas y las del paquete (salida reproducible) |
 | `native_footnotes` | `True` | Word: notas nativas (`footnotes.xml`) |
 | `css` | — | CSS extra al final |
+| `allowed_roots` | `()` | Directorios locales extra que el render puede leer (ver [Seguridad](#seguridad)) |
+| `allow_absolute_paths` | `False` | Permite leer cualquier archivo local (solo HTML de confianza) |
+| `allow_network` | `False` | Permite descargar recursos `http(s)` (solo HTML de confianza) |
 | `labels` | `Labels()` | Palabras visibles (abajo) |
 
 ### Palabras visibles (`Labels`)
@@ -201,6 +204,35 @@ ponlas en tu paquete de plantilla (`fonts:` + `font_family:`). El paquete
 vive en tu repositorio; la librería solo las carga al renderizar. En Word, el
 documento declara la fuente y, si es un clon métrico (Carlito), su original
 como sustituto.
+
+## Seguridad
+
+El HTML que recibe un renderer suele ser generado o editado por usuarios, así
+que se trata como **no confiable**. Por defecto:
+
+- **Archivos locales**: solo se leen `data:` URIs y archivos **dentro** de las
+  raíces permitidas — el `source_dir` del documento, las plantillas y assets de
+  la librería, y los directorios del paquete de plantilla (incluidos los
+  archivos que nombra su `package.yml`). Rutas absolutas, `file://` o `../`
+  que resuelvan fuera (también vía enlace simbólico) se **rechazan con un
+  warning** (`pdfgen_juanipis.security`) y la imagen se omite.
+- **Red (SSRF)**: WeasyPrint recibe un `url_fetcher` restrictivo en todas las
+  llamadas, también para lo que referencia el CSS (`url()`, `@font-face`):
+  `http(s)` y cualquier otro esquema se rechazan.
+- **Inyección de HTML**: la plantilla escapa todo valor de texto plano
+  (títulos, membrete, celdas de tabla, notas al pie, subtítulos, portada);
+  solo los bloques de cuerpo, que el parser reconstruye desde el árbol HTML,
+  se insertan como HTML.
+
+Para documentos de confianza, el llamador lo habilita explícitamente:
+
+```python
+RenderOptions(allowed_roots=["/srv/graficos"])   # una carpeta más
+RenderOptions(allow_absolute_paths=True)          # cualquier archivo local
+RenderOptions(allow_network=True)                 # recursos http(s)
+```
+
+La API 0.1 (legacy) no cambió de comportamiento: lee las rutas que le pasan.
 
 ## Contrato de render
 

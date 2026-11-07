@@ -10,7 +10,8 @@ hard-coded.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, Literal, Mapping, Optional
+from pathlib import Path
+from typing import Any, Dict, Literal, Mapping, Optional, Sequence, Union
 
 TextAlign = Literal["justify", "left", "right", "center"]
 SectionNumbering = Literal["roman", "none"]
@@ -105,6 +106,16 @@ class RenderOptions:
     isolate_fonts: bool = True
     #: Extra CSS appended after every other stylesheet (PDF only).
     css: Optional[str] = None
+    #: Resource policy (see ``pdfgen_juanipis.security``). By default a
+    #: render reads only data: URIs and files inside the document's
+    #: ``source_dir``, the library and the template package. Extra local
+    #: directories it may read:
+    allowed_roots: Sequence[Union[str, Path]] = ()
+    #: Read ANY local file an image / url() names (trusted input only).
+    allow_absolute_paths: bool = False
+    #: Fetch http(s) resources (trusted input only: server-side request
+    #: forgery risk in a rendering service).
+    allow_network: bool = False
     labels: Labels = field(default_factory=Labels)
 
     def __post_init__(self) -> None:
@@ -120,6 +131,7 @@ class RenderOptions:
             )
         object.__setattr__(self, "section_numbering", numbering)
         object.__setattr__(self, "theme", dict(self.theme or {}))
+        object.__setattr__(self, "allowed_roots", tuple(Path(p) for p in (self.allowed_roots or ())))
 
     def merged(self, **overrides: Any) -> "RenderOptions":
         """A copy with ``overrides`` applied (``None`` values ignored)."""

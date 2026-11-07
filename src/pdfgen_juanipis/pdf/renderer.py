@@ -39,6 +39,7 @@ from pdfgen_juanipis.packages import (
 from pdfgen_juanipis.pdf import passes
 from pdfgen_juanipis.pdf.pages import build_pages
 from pdfgen_juanipis.pdf.parsing import HtmlParser, first_text
+from pdfgen_juanipis.security import ResourcePolicy
 from pdfgen_juanipis.text import ASCII_DASHES, bind_number_to_percent
 
 logger = logging.getLogger("pdfgen_juanipis.pdf")
@@ -104,6 +105,15 @@ class HtmlRenderer:
             registry=registry,
         )
 
+    def resource_policy(self, source_dir: Optional[Path] = None) -> ResourcePolicy:
+        """What this render may read (see :mod:`pdfgen_juanipis.security`)."""
+        options = self.options
+        return ResourcePolicy.build(
+            [source_dir, TEMPLATE_DIR, *self.package.trusted_dirs(), *options.allowed_roots],
+            allow_absolute_paths=options.allow_absolute_paths,
+            allow_network=options.allow_network,
+        )
+
     # ── payload ─────────────────────────────────────────────────────
     def build_payload(self, html_content: str, *, source_dir: Optional[Path] = None) -> Dict[str, Any]:
         """The template context: title, theme, sections and pages."""
@@ -126,6 +136,7 @@ class HtmlRenderer:
             labels=options.labels,
             visual_layout=options.resolved_visual_layout(),
             source_dir=source_dir,
+            policy=self.resource_policy(source_dir),
         )
         sections = parser.extract_sections(root)
         if not sections:
@@ -173,7 +184,10 @@ class HtmlRenderer:
                     except TemplatePackageError as exc:
                         logger.warning("template package %r: %s", self.package.name, exc)
 
-        env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=False)
+        # Autoescape: titles, labels, letterhead values and table cells are
+        # plain text. Only the body blocks, which the parser rebuilt from the
+        # HTML tree, are marked safe in the template.
+        env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
         html_str = env.get_template(TEMPLATE_NAME).render(
             **payload,
             labels=self.options.labels,
@@ -245,20 +259,25 @@ class HtmlRenderer:
         html_str = self.build_html(html_content, source_dir=source_dir)
         base_url = str(source_dir or TEMPLATE_DIR)
 
+        # Every resource WeasyPrint loads (images, CSS url(), @font-face)
+        # goes through the policy: data: URIs and files inside the allowed
+        # roots only, unless the options opt in to more.
+        fetcher = self.resource_policy(source_dir).url_fetcher()
+
         with isolated_fontconfig(self.package.font_dirs(), enabled=options.isolate_fonts):
             # Without a FontConfiguration WeasyPrint ignores every @font-face.
             font_config = FontConfiguration()
-            stylesheets = [CSS(filename=str(STYLESHEET), font_config=font_config)]
+            stylesheets = [CSS(filename=str(STYLESHEET), font_config=font_config, url_fetcher=fetcher)]
             extra = self.extra_css()
             if extra:
                 # url() in a package stylesheet resolves inside the package.
                 stylesheets.append(CSS(
                     string=extra, font_config=font_config,
-                    base_url=str(self.package.root) + "/",
+                    base_url=str(self.package.root) + "/", url_fetcher=fetcher,
                 ))
 
             def render(markup: str) -> Any:
-                return HTML(string=markup, base_url=base_url).render(
+                return HTML(string=markup, base_url=base_url, url_fetcher=fetcher).render(
                     stylesheets=stylesheets, font_config=font_config,
                 )
 

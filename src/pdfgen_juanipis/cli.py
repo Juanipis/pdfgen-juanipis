@@ -86,6 +86,11 @@ def main(argv=None) -> int:
     html.add_argument("--language", default=None, help="BCP 47 tag, default es-CO")
     html.add_argument("--page-numbers", action="store_true", help="Print page numbers")
     html.add_argument("--css-extra", dest="css_extra", default=None, help="Extra CSS string")
+    html.add_argument(
+        "--allow-root", dest="allowed_roots", action="append", default=[],
+        help="Extra local directory images/CSS may be read from; repeatable",
+    )
+    html.add_argument("--allow-network", action="store_true", help="Allow http(s) resources")
 
     packages = sub.add_parser("packages", help="List the available template packages")
     packages.add_argument("--package-dir", dest="package_dirs", action="append", default=[])
@@ -178,6 +183,8 @@ def _run_html_command(args) -> int:
     options = RenderOptions().merged(**overrides)
     if args.page_numbers:
         options = options.merged(show_page_numbers=True)
+    if args.allowed_roots or args.allow_network:
+        options = options.merged(allowed_roots=args.allowed_roots, allow_network=args.allow_network)
     result = HtmlRenderer(options=options, registry=registry).render(
         html_text, pathlib.Path(args.output), source_dir=source_dir,
     )

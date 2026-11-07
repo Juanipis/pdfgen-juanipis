@@ -47,6 +47,19 @@ had rebuilt the HTML → PDF pipeline on top of this library.
   `python-docx` only under the `docx` extra; `dev` extra for tests.
 - Importing `pdfgen_juanipis` no longer imports WeasyPrint (lazy exports).
 
+### Security
+- The HTML-first renderer treats its input as untrusted. By default it reads
+  only `data:` URIs and local files inside the allowed roots (`source_dir`,
+  the library's templates/assets, the template package's directories);
+  absolute paths, `file://` and `../` escapes outside them are refused with a
+  warning. Every WeasyPrint `HTML()`/`CSS()` call gets a restrictive
+  `url_fetcher` (images, CSS `url()`, `@font-face`): `http(s)` and other
+  schemes are refused (no SSRF). Opt-ins: `RenderOptions(allowed_roots=[...])`,
+  `allow_absolute_paths=True`, `allow_network=True`.
+- The Jinja environment autoescapes; only the body blocks rebuilt by the
+  parser are inserted as HTML. Plain-text values spliced into HTML (inline
+  headings, cover lines, footnote texts, section subtitles) are escaped.
+
 ### Fixed
 - Legacy `render_pdf` set `FONTCONFIG_FILE="None"` when no fonts.conf was
   given, breaking fontconfig for the rest of the process.

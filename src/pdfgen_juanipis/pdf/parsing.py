@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+from html import escape
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -25,6 +26,7 @@ from pdfgen_juanipis.contract import (
 )
 from pdfgen_juanipis.options import Labels
 from pdfgen_juanipis.pdf.images import fit_image_src_for_pdf, read_image_bytes
+from pdfgen_juanipis.security import ResourcePolicy
 from pdfgen_juanipis.pdf.visual_layout import (
     ResolvedPDFVisualLayoutConfig,
     classify_aspect_ratio,
@@ -61,20 +63,6 @@ def first_text(root: HtmlElement, xpaths: List[str]) -> str:
         if value:
             return value
     return ""
-
-
-def normalize_src(src: str, source_dir: Optional[Path]) -> str:
-    """An image ``src`` WeasyPrint can open: URLs pass, paths become file URIs."""
-    if src.startswith(("http://", "https://", "data:", "file://")):
-        return src
-    src_path = Path(src)
-    if src_path.is_absolute() and src_path.exists():
-        return src_path.resolve().as_uri()
-    if source_dir:
-        candidate = (source_dir / src).resolve()
-        if candidate.exists():
-            return candidate.as_uri()
-    return src
 
 
 def _contract_attrs(element: HtmlElement) -> str:
@@ -136,6 +124,7 @@ class HtmlParser:
         visual_layout: Any = None,
         source_dir: Optional[Path] = None,
         text_width_pt: float = TEXT_WIDTH_PT,
+        policy: Optional[ResourcePolicy] = None,
     ) -> None:
         self.labels = labels or Labels()
         self.visual_layout: ResolvedPDFVisualLayoutConfig = (
@@ -144,6 +133,9 @@ class HtmlParser:
             else resolve_pdf_visual_layout_config(visual_layout)
         )
         self.source_dir = source_dir
+        # What an <img src> may load. Without one: data: URIs and files
+        # under source_dir only.
+        self.policy = policy or ResourcePolicy.build([source_dir] if source_dir else [])
         self.text_width_pt = text_width_pt
 
     # ── document level ──────────────────────────────────────────────
@@ -265,7 +257,7 @@ class HtmlParser:
         if not content:
             plain_text = " ".join(node.text_content().split())
             if plain_text and plain_text != " ".join((section_title or "").split()):
-                content.append({"type": "text", "text": [plain_text]})
+                content.append({"type": "text", "text": [escape(plain_text, quote=False)]})
         if not content:
             return None
 
@@ -335,7 +327,7 @@ class HtmlParser:
             # contract attributes have to be carried over explicitly.
             content.append({
                 "type": "html",
-                "html": f"<{tag}{_contract_attrs(element)}>{heading_text}</{tag}>",
+                "html": f"<{tag}{_contract_attrs(element)}>{escape(heading_text, quote=False)}</{tag}>",
             })
             return
 
@@ -386,7 +378,7 @@ class HtmlParser:
         if tag in {"div", "section", "article", "main"} and len(element):
             lead_text = " ".join((element.text or "").split())
             if lead_text:
-                text_buffer.append(lead_text)
+                text_buffer.append(escape(lead_text, quote=False))
             for child in element:
                 self.consume_element(
                     child, content=content, text_buffer=text_buffer,
@@ -529,8 +521,11 @@ class HtmlParser:
                     for prop in ("width", "height", "max-width", "max-height"):
                         style = re.sub(rf"(?i)(?<![-\w]){prop}\s*:[^;]+;?", "", style)
                     style = re.sub(r"\s{2,}", " ", style).strip(" ;")
-                normalized_src = normalize_src(src, self.source_dir)
+                normalized_src = self.policy.resolve_src(src, self.source_dir)
                 if not normalized_src:
+                    # Refused (and logged): the image is dropped, never
+                    # handed to WeasyPrint to fetch on its own.
+                    img.attrib.pop("src", None)
                     continue
                 final_src = fit_image_src_for_pdf(normalized_src) or normalized_src
                 img.attrib["src"] = final_src
@@ -578,4 +573,4 @@ class HtmlParser:
         return int(target)
 
 
-__all__ = ["CONSUMED_ATTR", "HtmlParser", "LONG_TABLE_ROWS", "first_text", "normalize_src"]
+__all__ = ["CONSUMED_ATTR", "HtmlParser", "LONG_TABLE_ROWS", "first_text"]

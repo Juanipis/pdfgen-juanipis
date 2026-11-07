@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import re
+from html import escape
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("pdfgen_juanipis.pdf.passes")
@@ -105,7 +106,10 @@ def inject_inline_footnotes(payload: Dict[str, Any]) -> None:
                 notes = [n for n in numbers if n in _refs]
                 if not notes:
                     return match.group(0)
-                spans = "".join(f'<span class="fn-note">{_refs.pop(n)}</span>' for n in notes)
+                # Note texts are plain text (read with text_content()).
+                spans = "".join(
+                    f'<span class="fn-note">{escape(_refs.pop(n), quote=False)}</span>' for n in notes
+                )
                 return f'<sup>{",".join(numbers)}</sup>{spans}'
 
             block["html"] = re.sub(

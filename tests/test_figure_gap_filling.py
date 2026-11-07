@@ -7,13 +7,26 @@ import pytest
 
 pytest.importorskip("weasyprint")
 
+from pdfgen_juanipis.fonts import FONTS_DIR  # noqa: E402
 from pdfgen_juanipis.pdf import passes  # noqa: E402
+
+#: The bundled Carlito, so line heights (and so the holes these tests
+#: build) are the same on every machine, whatever fonts it has installed.
+_FONT_CSS = (
+    "@font-face{font-family:T;src:url('"
+    + (FONTS_DIR / "carlito" / "Carlito-Regular.ttf").as_uri()
+    + "')} body{font-family:T;font-size:12pt;line-height:1.15}"
+)
 
 
 def _render(markup):
-    from weasyprint import HTML
+    from weasyprint import CSS, HTML
+    from weasyprint.text.fonts import FontConfiguration
 
-    return HTML(string=markup).render()
+    font_config = FontConfiguration()
+    return HTML(string=markup).render(
+        stylesheets=[CSS(string=_FONT_CSS, font_config=font_config)], font_config=font_config,
+    )
 
 
 _PARA = "<p style='margin:0 0 8pt 0'>" + "texto de prueba " * 60 + "</p>"
@@ -42,7 +55,7 @@ def _pages_text(markup):
 
 
 def test_text_after_a_jumped_figure_fills_the_hole():
-    markup = _doc(before=3, figure_pt=600, after=3)
+    markup = _doc(before=2, figure_pt=600, after=3)
     assert "despues0" not in _pages_text(markup)[0]
     filled = passes.fill_figure_gaps(markup, _render)
     assert "despues0" in _pages_text(filled)[0]
@@ -122,7 +135,7 @@ def test_a_figure_far_too_tall_is_not_crushed():
 
 
 def test_a_list_after_a_jumped_figure_fills_the_hole_too():
-    markup = _doc(before=3, figure_pt=600, after=0).replace(
+    markup = _doc(before=2, figure_pt=600, after=0).replace(
         "<h2>", "<ul><li>" + "elemento uno " * 30 + "</li><li>" + "elemento dos " * 30
         + "</li></ul><h2>", 1,
     )

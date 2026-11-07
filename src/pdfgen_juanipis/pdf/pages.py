@@ -9,6 +9,7 @@ definition rides on.
 from __future__ import annotations
 
 import re
+from html import escape
 from typing import Any, Dict, List, Optional
 
 from pdfgen_juanipis.contract import strip_leading_numeral, to_roman
@@ -52,7 +53,7 @@ def build_pages(
     # Cover lines flow as justified paragraphs at the top of the first page.
     if cover:
         lines_html = "".join(
-            f'<p style="text-align:justify;">{line}</p>'
+            f'<p style="text-align:justify;">{escape(line, quote=False)}</p>'
             for line in cover.get("cover_lines", []) if line
         )
         if lines_html:
@@ -76,7 +77,7 @@ def build_pages(
         if section_title:
             title_html += f'<div class="section-title"{title_style}>{section_title}</div>'
         if section_subtitle:
-            title_html += f'<div class="section-subtitle">{section_subtitle}</div>'
+            title_html += f'<div class="section-subtitle">{escape(section_subtitle, quote=False)}</div>'
         if title_html:
             all_blocks.append({"type": "html", "html": title_html, "keep_with_next": True})
 

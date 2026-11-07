@@ -200,6 +200,22 @@ class TemplatePackage:
         )
         return self.asset(name) if name else None
 
+    def trusted_dirs(self) -> List[Path]:
+        """Directories this package may make a render read: its own, its
+        shared asset dirs, the library assets, and the parent of every file
+        its manifest names (a manifest is trusted configuration)."""
+        dirs = [self.root, *self.asset_dirs, ASSETS_DIR]
+        names = [self.theme.get(k) for k in (
+            "header_complete_path", "header_banner_path", "header_banner_path_cont", "header_logo_path",
+        )] + [face["file"] for face in self.fonts]
+        for name in names:
+            if name:
+                try:
+                    dirs.append(self.asset(str(name)).parent)
+                except TemplatePackageError:
+                    continue
+        return dirs
+
     def font_dirs(self) -> List[Path]:
         """Directories fontconfig should know for this package."""
         dirs = [FONTS_DIR]
