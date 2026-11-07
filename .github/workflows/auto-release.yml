@@ -34,8 +34,12 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add pyproject.toml CHANGELOG.md
-          git commit -m "chore(release): v${{ steps.bump.outputs.version }} [skip ci]"
-          git push
+          # A version bumped by hand (and already in the changelog) leaves
+          # nothing to commit: release it as is.
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): v${{ steps.bump.outputs.version }} [skip ci]"
+            git push
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

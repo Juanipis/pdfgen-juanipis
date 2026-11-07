@@ -1,5 +1,6 @@
 import argparse
 import re
+import subprocess
 from datetime import date
 from pathlib import Path
 
@@ -10,6 +11,23 @@ def read_version(pyproject_path: Path) -> str:
     if not match:
         raise SystemExit("Could not find version in pyproject.toml")
     return match.group(1)
+
+
+def is_released(version: str) -> bool:
+    """True when the tag ``v<version>`` already exists (the workflow fetches tags)."""
+    out = subprocess.run(["git", "tag", "-l", f"v{version}"], capture_output=True, text=True, check=False)
+    return bool(out.stdout.strip())
+
+
+def has_changelog_entry(changelog_path: Path, version: str) -> bool:
+    text = changelog_path.read_text(encoding="utf-8")
+    return re.search(rf"^##\s+{re.escape(version)}\s+-\s+", text, re.M) is not None
+
+
+def next_version(current: str, released: bool) -> str:
+    """The version to publish: the one in pyproject.toml when it was never
+    released (a deliberate bump, e.g. 0.1.12 → 0.2.0), else the next patch."""
+    return bump_patch(current) if released else current
 
 
 def bump_patch(version: str) -> str:
@@ -78,9 +96,11 @@ def main():
     changelog_path = Path(args.changelog)
 
     current = read_version(pyproject_path)
-    new_version = bump_patch(current)
-    write_version(pyproject_path, new_version)
-    update_changelog(changelog_path, new_version)
+    new_version = next_version(current, is_released(current))
+    if new_version != current:
+        write_version(pyproject_path, new_version)
+    if not has_changelog_entry(changelog_path, new_version):
+        update_changelog(changelog_path, new_version)
 
     notes = extract_release_notes(changelog_path, new_version)
     Path(args.notes).write_text(notes, encoding="utf-8")
