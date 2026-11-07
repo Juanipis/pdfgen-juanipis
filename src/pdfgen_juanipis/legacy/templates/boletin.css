@@ -1,0 +1,530 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   pdfgen-juanipis — boletin.css
+   CSS Paged Media layout: content flows naturally, WeasyPrint handles
+   page breaks.  Header/footer use position:fixed to repeat on every page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@page {
+  size: Letter;
+  /* Reserve space for the fixed header and footer so content doesn't overlap */
+  margin: 100pt 85pt 70pt 85pt;
+}
+
+/* First page may have titles below the banner, so give it more top margin */
+@page :first {
+  margin-top: 130pt;
+}
+
+:root {
+  --blue-title: #2e5395;
+  --orange-footer: #f58534;
+  --text: #000000;
+}
+
+/* ── Fonts ─────────────────────────────────────────────────────────────────
+   Open-source, metric-compatible replacements bundled with the library
+   (see assets/fonts/FONTS.md): Carlito = Calibri, TeX Gyre Adventor =
+   Century Gothic, Liberation Serif = Times New Roman, IBM Plex Sans
+   Condensed ≈ Aptos Narrow. */
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../../assets/fonts/carlito/Carlito-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../../assets/fonts/carlito/Carlito-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../../assets/fonts/carlito/Carlito-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../../assets/fonts/carlito/Carlito-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'TeX Gyre Adventor';
+  src: url('../../assets/fonts/tex-gyre-adventor/texgyreadventor-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'TeX Gyre Adventor';
+  src: url('../../assets/fonts/tex-gyre-adventor/texgyreadventor-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('../../assets/fonts/liberation-serif/LiberationSerif-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('../../assets/fonts/liberation-serif/LiberationSerif-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  src: url('../../assets/fonts/ibm-plex-sans-condensed/IBMPlexSansCondensed-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  src: url('../../assets/fonts/ibm-plex-sans-condensed/IBMPlexSansCondensed-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-size: 12pt;
+  color: var(--text);
+}
+
+/* ── Fixed header elements (repeat on every page in paged media) ──────── */
+
+.header-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 612pt;
+  height: 79.5pt;
+  object-fit: cover;
+}
+
+.header-logo {
+  position: fixed;
+  top: 13.95pt;
+  left: 498.25pt;
+  width: 81.41pt;
+  height: 36.75pt;
+  object-fit: contain;
+}
+
+/* ── Header titles (first page only, positioned absolutely within flow) ── */
+
+.header-title {
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--blue-title);
+  line-height: 1.15;
+  margin-bottom: 2pt;
+}
+
+.header-title em,
+.header-title i,
+.header-subtitle em,
+.header-subtitle i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.header-subtitle {
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--blue-title);
+  line-height: 1.15;
+  margin-bottom: 6pt;
+}
+
+/* ── Intro (short text right below titles on first page) ─────────────── */
+
+.intro {
+  font-size: 12pt;
+  line-height: 1.0;
+  margin-bottom: 8pt;
+}
+
+/* ── Content (normal document flow — WeasyPrint paginates naturally) ──── */
+
+.content {
+  font-size: 12pt;
+  line-height: 1.1;
+}
+
+.content-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.content .section-title {
+  margin: 0 0 6pt 0;
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-size: 14.04pt;
+  font-weight: 700;
+  color: #000000;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.content .section-title em,
+.content .section-title i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.content .section-title .roman {
+  display: inline-block;
+  width: 32pt;
+}
+
+.content .section-subtitle {
+  margin: 10pt 0 12pt 0;
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-size: 14.04pt;
+  font-weight: 400;
+  color: var(--blue-title);
+  text-align: center;
+}
+
+.content .section-title-serif {
+  margin: 12pt 0 8pt 0;
+  font-family: 'Liberation Serif', 'Times New Roman', serif;
+  font-size: 14.04pt;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+}
+
+.content p {
+  margin: 0 0 6pt 0;
+  font-size: 12pt;
+}
+
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+
+.cover {
+  text-align: center;
+  color: var(--blue-title);
+  margin-top: 40pt;
+}
+
+.cover-title {
+  font-size: 20pt;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10pt;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 12pt;
+}
+
+.cover-lines {
+  font-size: 11pt;
+  color: #333333;
+  line-height: 1.35;
+}
+
+/* ── Charts / Images ──────────────────────────────────────────────────── */
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 6pt 0 2pt 0;
+}
+
+.chart-caption {
+  font-size: 9pt;
+  font-style: italic;
+  color: #333333;
+  margin-bottom: 8pt;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+
+.tabla-abaco {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: 'IBM Plex Sans Condensed', 'Aptos Narrow', sans-serif;
+  font-size: 11.04pt;
+  color: #000000;
+  margin: 6pt 0 10pt 0;
+  width: 532.66pt;
+}
+
+.tabla-abaco th,
+.tabla-abaco td {
+  border: 0.6pt solid #000000;
+  padding: 2pt 4pt;
+  line-height: 1.0;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.tabla-abaco thead th {
+  background: #d9d9d9;
+  font-weight: 700;
+  white-space: normal;
+}
+
+.tabla-abaco .col-dep {
+  text-align: left;
+  width: 120pt;
+}
+
+.tabla-abaco .col-num {
+  width: 58pt;
+}
+
+.table-wrap {
+  width: 532.66pt;
+  margin-left: -45.38pt;
+}
+
+.tabla-lg { width: 532.66pt; }
+.tabla-md { width: 532.66pt; }
+.tabla-sm { width: 532.66pt; }
+
+/* ── Footer meta (refs / notes) — rendered inline at end of content ──── */
+
+.footer-meta {
+  margin-top: 12pt;
+  border-top: 0.5pt solid #cccccc;
+  padding-top: 6pt;
+}
+
+.refs {
+  margin-bottom: 8pt;
+}
+
+.refs-line {
+  width: 120pt;
+  border-top: 0.6pt solid #000000;
+  margin-bottom: 4pt;
+}
+
+.refs-text {
+  font-family: 'Carlito', 'Calibri', sans-serif;
+  font-style: italic;
+  font-size: 8pt;
+  line-height: 1.15;
+  color: #000000;
+  margin-bottom: 1pt;
+  overflow-wrap: anywhere;
+}
+
+.footer-notes {
+  font-size: 8pt;
+  line-height: 1.15;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+/* ── Fixed footer contact (repeats on every page) ─────────────────────── */
+
+.footer-contact {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 20pt;
+  text-align: center;
+  font-family: 'TeX Gyre Adventor', 'Century Gothic', sans-serif;
+  font-weight: 700;
+  font-size: 11.04pt;
+  color: var(--orange-footer);
+  line-height: 1.0;
+}
+
+/* ── Page number ──────────────────────────────────────────────────────── */
+
+.footer-page {
+  font-size: 6.5pt;
+  color: #000000;
+  margin-top: 4pt;
+}
+
+/* ── Report titles ────────────────────────────────────────────────────── */
+
+.report-title {
+  font-size: 20pt;
+  font-weight: 700;
+  text-align: center;
+  color: #2e5395;
+  margin-top: 12pt;
+}
+
+.report-subtitle {
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+  color: #2e5395;
+  margin-top: 6pt;
+  margin-bottom: 12pt;
+}
+
+.section-subtitle {
+  font-size: 10pt;
+  color: #2e5395;
+  text-align: center;
+  margin-bottom: 8pt;
+}
+
+/* ── Figures ───────────────────────────────────────────────────────────── */
+
+.figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 8pt auto 4pt;
+}
+
+.figure-wide {
+  width: 100%;
+}
+
+.figure-caption {
+  font-size: 8pt;
+  color: #333;
+  text-align: center;
+  margin-bottom: 6pt;
+}
+
+.figure-source {
+  font-size: 8pt;
+  text-align: center;
+  margin-bottom: 10pt;
+}
+
+.map-grid {
+  display: flex;
+  justify-content: space-between;
+  margin: 6pt 0 2pt;
+}
+
+.map-item {
+  width: 31%;
+  text-align: center;
+  margin-right: 10pt;
+}
+
+.map-item:last-child {
+  margin-right: 0;
+}
+
+.map-img {
+  width: 100%;
+  height: auto;
+  border-radius: 2pt;
+}
+
+.map-label {
+  font-weight: 700;
+  margin-top: 4pt;
+}
+
+/* ── Superscript (footnote markers) ───────────────────────────────────── */
+sup {
+  font-size: 8pt;
+  vertical-align: super;
+  line-height: 0;
+}
+
+/* ── Inline figures (<figure> HTML element) ───────────────────────────── */
+figure {
+  display: block;
+  max-width: 100%;
+  margin: 8pt auto 4pt;
+}
+
+figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+figcaption {
+  font-size: 9pt;
+  font-style: italic;
+  color: #555555;
+  text-align: center;
+  margin-top: 4pt;
+  margin-bottom: 6pt;
+}
+
+figcaption .figure-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+figure.figure-full {
+  text-align: center;
+  clear: both;
+}
+
+figure.figure-left {
+  float: left;
+  width: 42%;
+  margin: 4pt 12pt 8pt 0;
+}
+
+figure.figure-right {
+  float: right;
+  width: 42%;
+  margin: 4pt 0 8pt 12pt;
+}
+
+figure.figure-column {
+  width: 100%;
+}
+
+/* ── Lists ─────────────────────────────────────────────────────────────── */
+ul, ol {
+  margin: 6pt 0;
+  padding-left: 18pt;
+}
+
+li {
+  margin: 3pt 0;
+  line-height: 1.2;
+}
+
+/* ── Inline footnote paragraphs ───────────────────────────────────────── */
+p.footnote {
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #555555;
+  margin: 6pt 0 3pt 0;
+  padding-left: 8pt;
+  border-left: 1.5pt solid #cccccc;
+}
+
+p.footnote sup {
+  font-weight: bold;
+  margin-right: 3pt;
+}
