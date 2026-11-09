@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdfgen-juanipis"
+version = "0.2.1"
+description = "Editable HTML to paginated PDF (and Word) on WeasyPrint, with template packages and post-layout passes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Juan Pablo Díaz Correa", email = "juan@juanipis.xyz" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent"
+]
+license-files = ["LICENSE"]
+dependencies = [
+  "Jinja2>=3.1.4",
+  "WeasyPrint>=66.0",
+  "pydyf>=0.11.0",
+  "jsonschema>=4.23.0",
+  "PyYAML>=6.0.2",
+  "lxml>=5.0",
+  "Pillow>=10.0"
+]
+
+[project.optional-dependencies]
+docx = [
+  "python-docx>=1.1"
+]
+dev = [
+  "pytest>=8.3",
+  "pypdf>=4.0",
+  "python-docx>=1.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/Juanipis/pdfgen-juanipis"
+Issues = "https://github.com/Juanipis/pdfgen-juanipis/issues"
+Source = "https://github.com/Juanipis/pdfgen-juanipis"
+
+[project.scripts]
+pdfgen-juanipis = "pdfgen_juanipis.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pdfgen_juanipis = [
+  "templates/*.css",
+  "templates/*.jinja",
+  "packages/*/package.yml",
+  "packages/*/*.css",
+  "packages/*/assets/*",
+  "legacy/schema.json",
+  "legacy/templates/*.css",
+  "legacy/templates/*.jinja",
+  "assets/fonts/FONTS.md",
+  "assets/fonts/*/*",
+  "assets/*.png"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

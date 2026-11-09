@@ -1,0 +1,12 @@
+# plain — the library's default template package.
+#
+# No header band and no contact block: the page geometry of the shared
+# stylesheet with nothing painted in its margins. Brand letterheads live
+# with their owner and are registered at start-up (see the README,
+# "Template packages").
+label: "Plain"
+description: >
+  Neutral page without letterhead: no header band, no contact block.
+theme: {}
+layout: {}
+palette: {}

@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Outputs
+stress_outputs/
+tmp_assets/
+output_page*.png
+output.pdf
+demo_output.pdf
+boletin_real_output.pdf
+boletin_text.txt
+
+# Build artifacts
+dist/
+build/
+*.whl
+*.tar.gz
+
+# OS
+.DS_Store
+release-notes.md

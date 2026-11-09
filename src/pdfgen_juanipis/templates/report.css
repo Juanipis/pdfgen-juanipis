@@ -1,0 +1,818 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   pdfgen-juanipis — report.css
+   Stylesheet of the HTML-first renderer (HtmlRenderer).
+
+   CSS Paged Media: content flows naturally and WeasyPrint paginates it.
+   The letterhead (header band, contact block) uses position:fixed so it
+   repeats on every page; the @page margins reserve room for it.
+
+   Never use position:absolute, a fixed height or overflow:hidden on a
+   content container: WeasyPrint could no longer paginate it. Do not put
+   page-break-inside:avoid on large containers either.
+
+   A template package overrides what it owns AFTER this file: geometry
+   (packages.build_chrome_geometry_css), palette (--pdfgen-title-color,
+   --pdfgen-accent-color), body font (--pdfgen-font-family) and its own CSS.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@page {
+  size: Letter;
+  margin: 120pt 85pt 60pt 85pt;
+
+  @footnote {
+    border-top: 0.6pt solid #000000;
+    padding-top: 4pt;
+    margin-top: 8pt;
+  }
+}
+
+:root {
+  --pdfgen-font-family: 'Carlito', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+  --pdfgen-title-color: #2e5395;
+  --pdfgen-accent-color: #f58634;
+  --text: #000000;
+}
+
+/* ── Fonts (bundled, open source: see assets/fonts/FONTS.md) ──────────────
+   Carlito is metric-compatible with Calibri. */
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../assets/fonts/carlito/Carlito-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../assets/fonts/carlito/Carlito-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../assets/fonts/carlito/Carlito-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('../assets/fonts/carlito/Carlito-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--pdfgen-font-family);
+  font-size: 12pt;
+  color: var(--text);
+}
+
+/* ── Fixed header band (repeats on every page) ─────────────────────────── */
+
+.header-complete {
+  position: fixed;
+  top: -120pt;
+  left: -85pt;
+  width: 612pt;
+  height: 105pt;
+  object-fit: fill;
+}
+
+/* ── Document title / subtitle (first page, normal flow) ───────────────── */
+
+.header-title {
+  font-family: var(--pdfgen-font-family);
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--pdfgen-title-color);
+  line-height: 1.15;
+  margin-bottom: 2pt;
+}
+
+.header-title em,
+.header-title i,
+.header-subtitle em,
+.header-subtitle i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.header-subtitle {
+  font-family: var(--pdfgen-font-family);
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--pdfgen-title-color);
+  line-height: 1.15;
+  margin-bottom: 6pt;
+}
+
+/* ── Intro ─────────────────────────────────────────────────────────────── */
+
+.intro {
+  font-size: 12pt;
+  line-height: 1.0;
+  margin-bottom: 8pt;
+  text-align: justify;
+}
+
+/* ── Content (normal flow) ─────────────────────────────────────────────── */
+
+.content {
+  font-size: 12pt;
+  line-height: 1.15;
+}
+
+.content p {
+  margin: 0 0 5pt 0;
+  font-size: 12pt;
+  line-height: 1.15;
+  text-align: justify;
+  orphans: 3;
+  widows: 3;
+}
+
+.content li {
+  text-align: justify;
+}
+
+/* ── PDF bookmarks (clickable outline in PDF viewers) ─────────────────── */
+
+.content .section-title,
+.content h2 {
+  bookmark-level: 1;
+  bookmark-label: content();
+  bookmark-state: open;
+}
+
+.content .section-subtitle,
+.content h3 {
+  bookmark-level: 2;
+  bookmark-label: content();
+}
+
+/* ── Section headings ──────────────────────────────────────────────────
+   A heading never sits alone at the bottom of a page: the block after it
+   starts on the same page or the heading moves with it. Headings are
+   small, so this does not contradict the rule against avoid-breaks on
+   content containers. */
+
+.content .section-title,
+.content .section-subtitle,
+.content .section-title-serif,
+.content h1,
+.content h2,
+.content h3 {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* ── Render contract (see pdfgen_juanipis.contract) ─────────────────────
+   Structural directives the input HTML may carry. Each one has a
+   matching implementation in the Word exporter; keep the two in step. */
+
+/* data-page-break="before" → the block starts on a fresh page. */
+.content [data-page-break="before"] {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* data-keep-with-next → do not separate the block from the next one. */
+.content [data-keep-with-next] {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.content .section-title {
+  font-family: var(--pdfgen-font-family);
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--pdfgen-title-color);
+  margin: 10pt 0 5pt 0;
+  line-height: 1.2;
+}
+
+.content .section-title em,
+.content .section-title i {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.content .section-title .roman {
+  display: inline-block;
+  width: 32pt;
+}
+
+.content .section-subtitle {
+  font-family: var(--pdfgen-font-family);
+  font-size: 11pt;
+  font-weight: 400;
+  color: var(--pdfgen-title-color);
+  text-align: center;
+  margin: 4pt 0 8pt 0;
+}
+
+.content .section-title-serif {
+  margin: 12pt 0 8pt 0;
+  font-family: var(--pdfgen-font-family);
+  font-size: 14.04pt;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+}
+
+.content h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--pdfgen-title-color);
+  margin: 10pt 0 5pt 0;
+}
+
+.content h3 {
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #333333;
+  margin: 8pt 0 4pt 0;
+}
+
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+
+.cover {
+  text-align: center;
+  color: var(--pdfgen-title-color);
+  margin-top: 40pt;
+}
+
+.cover-title {
+  font-size: 20pt;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10pt;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 12pt;
+}
+
+.cover-lines {
+  font-size: 11pt;
+  color: #333333;
+  line-height: 1.35;
+}
+
+/* ── Figures & charts ──────────────────────────────────────────────────── */
+
+.content figure {
+  page-break-inside: avoid;
+  margin: 6pt 0 8pt 0;
+  text-align: center;
+}
+
+.content figure.figure-full,
+.content figure.figure-column {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content figure.figure-left,
+.content figure.figure-right {
+  width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  /* A figure close to the page height leaves no room for the page's
+     footnote area, and the footnote pass then pushes the paragraph before
+     it, producing a nearly blank page. ~470pt keeps lead paragraph,
+     figure, caption and notes on one page. */
+  max-height: 470pt;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+/* Any image in the body, even one no <figure> wraps, stays inside the
+   text column. Same caps as a figure. */
+.content img {
+  max-width: 100%;
+  max-height: 470pt;
+  height: auto;
+  object-fit: contain;
+}
+
+.content figcaption {
+  font-size: 8.5pt;
+  font-style: normal;
+  color: #555555;
+  text-align: center;
+  margin-top: 3pt;
+  line-height: 1.25;
+}
+
+.content figcaption .figure-title {
+  display: inline-block;
+  font-weight: 600;
+  font-style: normal;
+  color: #2c3e50;
+}
+
+/* Methodological sub-caption / source line: one step smaller and italic,
+   an annotation of the caption rather than a second title. */
+.content figcaption .figure-subcaption {
+  font-size: 7.5pt;
+  font-style: italic;
+  color: #666666;
+}
+
+.content .chart {
+  page-break-inside: avoid;
+  text-align: center;
+  margin: 6pt 0;
+}
+
+.content .chart img {
+  display: block;
+  max-width: 95%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.content .chart-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 3pt;
+}
+
+.content .chart-caption {
+  font-size: 8.5pt;
+  font-style: italic;
+  color: #555555;
+  margin-top: 3pt;
+  line-height: 1.15;
+}
+
+figure.figure-unresolved,
+.content figure.figure-unresolved {
+  display: none !important;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+
+/* Data grids are compact: several can share a page. */
+.pdfgen-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: var(--pdfgen-font-family);
+  font-size: 8pt;
+  color: #000000;
+  margin: 4pt 0 8pt 0;
+  /* The printable width (contract.TEXT_WIDTH_PT), never a constant of its own. */
+  width: 100%;
+}
+
+.pdfgen-table th,
+.pdfgen-table td {
+  border: 0.6pt solid #000000;
+  padding: 1pt 4pt;
+  line-height: 1.0;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* A header is a label: it never splits inside a word. */
+.pdfgen-table th {
+  overflow-wrap: normal;
+}
+
+/* The header repeats on every page a table breaks across. */
+.pdfgen-table thead {
+  display: table-header-group;
+}
+
+.pdfgen-table thead th {
+  background: #d9d9d9;
+  font-weight: 700;
+  white-space: normal;
+}
+
+.pdfgen-table .col-label {
+  text-align: left;
+  width: 120pt;
+}
+
+.pdfgen-table .col-num {
+  width: 58pt;
+}
+
+.table-wrap {
+  width: 100%;
+  margin-left: 0;
+  page-break-inside: avoid;
+}
+
+/* ── Body tables ─────────────────────────────────────────────────────────
+   A table inside a section is prose in a grid: text-heavy cells read
+   left-aligned, and the grid MUST be allowed to break across pages. */
+.pdfgen-table.is-body {
+  font-size: 8.5pt;
+  width: 100%;
+}
+
+.pdfgen-table.is-body th,
+.pdfgen-table.is-body td {
+  text-align: left;
+  padding: 2.5pt 4pt;
+  line-height: 1.15;
+  vertical-align: top;
+}
+
+.pdfgen-table.is-body .col-label {
+  width: auto;
+}
+
+.pdfgen-table.is-body .col-num {
+  width: auto;
+  text-align: left;
+}
+
+/* A grid taller than a page: `avoid` on something that cannot fit is an
+   impossible instruction, and the result would be blank pages. */
+.table-wrap.wrap-body,
+.table-wrap.wrap-long {
+  page-break-inside: auto;
+}
+
+/* What does hold when a table breaks: a ROW is never cut in half. */
+.pdfgen-table tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* The table's NAME, above the grid (from its <caption>). */
+.content .table-title,
+.table-title {
+  font-size: 9pt;
+  font-weight: 600;
+  color: #222222;
+  text-align: left;
+  line-height: 1.3;
+  margin: 8pt 0 4pt 0;
+  page-break-after: avoid;
+}
+
+/* The table's source line, under the grid: same conventions as a figure
+   caption, so tables and figures are annotated the same way. */
+.content .table-caption,
+.table-caption {
+  font-size: 8.5pt;
+  color: #555555;
+  text-align: center;
+  line-height: 1.25;
+  margin: 3pt 0 10pt 0;
+  page-break-before: avoid;
+}
+
+/* ── Leftover footnotes / notes (flow after the content) ───────────────── */
+
+.footer-meta {
+  margin-top: 12pt;
+  border-top: 0.5pt solid #cccccc;
+  padding-top: 6pt;
+}
+
+.refs {
+  margin-bottom: 8pt;
+}
+
+.refs-line {
+  width: 120pt;
+  border-top: 0.6pt solid #000000;
+  margin-bottom: 4pt;
+}
+
+.refs-text {
+  font-family: var(--pdfgen-font-family);
+  font-style: italic;
+  font-size: 8pt;
+  line-height: 1.15;
+  color: #000000;
+  margin-bottom: 1pt;
+  overflow-wrap: anywhere;
+}
+
+.footer-notes {
+  font-size: 8pt;
+  line-height: 1.15;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+/* ── Fixed contact block (repeats on every page) ───────────────────────── */
+
+.footer-contact {
+  position: fixed;
+  left: -85pt;
+  right: -85pt;
+  bottom: -50pt;
+  text-align: center;
+  font-family: var(--pdfgen-font-family);
+  line-height: 1.4;
+}
+
+.footer-line-primary {
+  font-size: 13pt;
+  color: #999999;
+}
+
+.footer-site {
+  font-weight: 700;
+  color: #666666;
+}
+
+.footer-separator {
+  color: var(--pdfgen-accent-color);
+  margin: 0 1pt;
+}
+
+.footer-line-secondary {
+  font-size: 9pt;
+  color: #666666;
+  font-weight: 400;
+}
+
+/* ── Footnotes (CSS page floats: WeasyPrint places them at the page foot) */
+
+.fn-note {
+  float: footnote;
+  footnote-policy: line;
+  font-family: var(--pdfgen-font-family);
+  font-size: 8pt;
+  font-style: italic;
+  line-height: 1.15;
+  color: #000000;
+  text-align: justify;
+}
+
+/* The text already carries the <sup> marker and the note starts with its
+   own number, so the generated call and marker are suppressed. */
+.fn-note::footnote-call {
+  content: none;
+}
+
+.fn-note::footnote-marker {
+  content: none;
+}
+
+/* ── Report titles ─────────────────────────────────────────────────────── */
+
+.report-title {
+  font-size: 20pt;
+  font-weight: 700;
+  text-align: center;
+  color: var(--pdfgen-title-color);
+  margin-top: 12pt;
+}
+
+.report-subtitle {
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+  color: var(--pdfgen-title-color);
+  margin-top: 6pt;
+  margin-bottom: 12pt;
+}
+
+.section-subtitle {
+  font-size: 10pt;
+  color: var(--pdfgen-title-color);
+  text-align: center;
+  margin-bottom: 8pt;
+}
+
+/* ── Map grids ─────────────────────────────────────────────────────────── */
+
+.map-grid {
+  display: flex;
+  justify-content: space-between;
+  margin: 6pt 0 2pt;
+}
+
+.map-item {
+  width: 31%;
+  text-align: center;
+  margin-right: 10pt;
+}
+
+.map-item:last-child {
+  margin-right: 0;
+}
+
+.map-img {
+  width: 100%;
+  height: auto;
+  border-radius: 2pt;
+}
+
+.map-label {
+  font-weight: 700;
+  margin-top: 4pt;
+}
+
+/* ── Superscript ───────────────────────────────────────────────────────── */
+
+sup {
+  font-size: 7pt;
+  vertical-align: super;
+  line-height: 0;
+  white-space: nowrap;
+}
+
+/* ── Lists ─────────────────────────────────────────────────────────────── */
+
+ul, ol {
+  margin: 4pt 0 6pt 0;
+  padding-left: 16pt;
+}
+
+li {
+  margin: 2pt 0;
+  line-height: 1.15;
+}
+
+/* ── Inline emphasis ───────────────────────────────────────────────────── */
+
+.content strong, .content b {
+  font-weight: 700;
+}
+
+.content em, .content i {
+  font-style: italic;
+}
+
+/* ── Footnote paragraphs left in the flow ──────────────────────────────── */
+
+p.footnote {
+  font-size: 8pt;
+  line-height: 1.1;
+  color: #555555;
+  margin: 6pt 0 3pt 0;
+  padding-left: 8pt;
+  border-left: 1.5pt solid #cccccc;
+}
+
+p.footnote sup {
+  font-weight: bold;
+  margin-right: 3pt;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Typography lock. Every text block uses the body family, with real bold
+   and italic faces (no synthesized ones), so a package changes the font
+   in ONE place: --pdfgen-font-family.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html, body, .page, .content-block, p, div, span, sup,
+.content, .content p, .content li, .intro,
+.cover, .cover-title, .cover-subtitle, .cover-lines,
+.content table, .content thead, .content tbody, .content tr,
+.content th, .content td, .content .table-wrap, .content .table-caption,
+.pdfgen-table, .pdfgen-table thead, .pdfgen-table tbody, .pdfgen-table tr,
+.pdfgen-table th, .pdfgen-table td,
+.content .chart-title, .content .chart-caption, .content figcaption,
+.content figcaption .figure-title, .content .section-title, .content .section-subtitle,
+.refs, .refs-text, .refs-entry, .refs-marker, .refs-body,
+.footer-meta, .footer-notes, .footer-contact, .footer-page,
+.report-title, .report-subtitle, .section-subtitle, .map-label,
+.figure-caption, .header-title, .header-subtitle {
+  font-family: var(--pdfgen-font-family) !important;
+}
+
+/* Tables: one stable family and weight to avoid per-glyph fallback. */
+.content table, .content th, .content td, .content .table-caption,
+.pdfgen-table, .pdfgen-table th, .pdfgen-table td {
+  font-family: var(--pdfgen-font-family) !important;
+  font-style: normal !important;
+  font-kerning: normal !important;
+  font-variant-ligatures: none !important;
+}
+
+.content td, .pdfgen-table td {
+  font-weight: 400 !important;
+}
+
+.content th, .pdfgen-table th {
+  font-weight: 700 !important;
+}
+
+.content .section-title {
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.header-title, .header-subtitle {
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+}
+
+.header-title em, .header-title i,
+.header-subtitle em, .header-subtitle i,
+.content .section-title em, .content .section-title i {
+  font-family: var(--pdfgen-font-family) !important;
+  font-style: italic !important;
+  font-weight: 700 !important;
+}
+
+.content .section-title strong, .content .section-title b {
+  font-weight: 700 !important;
+}
+
+.content .section-title .roman {
+  font-weight: 700 !important;
+  width: 34pt !important;
+}
+
+.content em, .content i {
+  font-family: var(--pdfgen-font-family) !important;
+  font-style: italic !important;
+}
+
+.content strong, .content b {
+  font-family: var(--pdfgen-font-family) !important;
+  font-weight: 700 !important;
+}
+
+/* Mixed emphasis: real bold-italic in prose and captions. */
+.content strong em, .content strong i, .content b em, .content b i,
+.content em strong, .content em b, .content i strong, .content i b,
+.content .chart-title em, .content .chart-title i,
+.content .chart-title strong em, .content .chart-title em strong,
+.content .chart-caption em, .content .chart-caption i,
+.content .chart-caption strong em, .content .chart-caption em strong,
+.content figcaption em, .content figcaption i,
+.content figcaption strong em, .content figcaption em strong,
+.content figcaption .figure-title em, .content figcaption .figure-title i {
+  font-family: var(--pdfgen-font-family) !important;
+  font-style: italic !important;
+  font-weight: 700 !important;
+}
+
+/* Structured footer refs: marker and body visually attached. */
+.refs-entry {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  margin-bottom: 1.5pt;
+}
+
+.refs-entry:last-child {
+  margin-bottom: 0;
+}
+
+.refs-marker {
+  display: table-cell;
+  width: 18pt;
+  padding-right: 4pt;
+  vertical-align: top;
+  font-size: 8pt;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.refs-body {
+  display: table-cell;
+  vertical-align: top;
+  font-size: 8pt;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.15;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+/* A page number must not resemble a footnote marker. */
+.footer-page {
+  font-size: 6.5pt !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  color: #666666 !important;
+  letter-spacing: 0.02em;
+}

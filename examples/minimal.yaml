@@ -1,0 +1,20 @@
+title: Informe de ejemplo
+refs_catalog:
+  "1": "Fuente de ejemplo A (2024)"
+  "2": "Fuente de ejemplo B (2024)"
+
+theme:
+  header_banner_path: banner.png
+  header_logo_path: logo.png
+  title_line1: "Reporte de Indicadores"
+  title_line2: "Ejemplo YAML"
+  footer_site: "example.org"
+  footer_phone: "Contacto: +1 555 0100"
+
+sections:
+  - title: "I. Introduccion"
+    content:
+      - type: text
+        text: "Texto con <strong>negrita</strong> y refs [1]."
+      - type: text
+        text: "Otro parrafo con ref [2]."

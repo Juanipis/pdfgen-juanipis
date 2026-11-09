@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'es' }}">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+</head>
+<body>
+  {% macro render_table(table) %}
+    {# The parser always passes total_width (contract.TEXT_WIDTH_PT); the
+       fallback is for a caller that builds a table block by hand. #}
+    {% set total_width = table.total_width or 442.0 %}
+    {% set dep_header = table.dep_header or '' %}
+    {% set show_header = table.show_header if table.show_header is defined else true %}
+    {% set body = table.variant == 'body' %}
+    {# One header tier (`headers`) or two (`groups`). #}
+    {% set flat = table.headers or [] %}
+    {% set ns = namespace(num_cols=0) %}
+    {% for g in table.groups %}
+      {% set ns.num_cols = ns.num_cols + (g.months | length) %}
+    {% endfor %}
+    {% set num_cols = flat | length if flat else ns.num_cols %}
+    {% if table.title %}
+    <div class="table-title">{{ table.title }}</div>
+    {% endif %}
+    {# A data grid taller than a page cannot honour page-break-inside:avoid;
+       above the threshold it may break (rows stay whole, the header repeats). #}
+    <div class="table-wrap{{ ' wrap-body' if body else '' }}{{ ' wrap-long' if table.breakable else '' }}">
+      <table class="pdfgen-table{{ ' is-body' if body else '' }}">
+        {% if table.column_widths %}
+        <colgroup>
+          {% for width in table.column_widths %}
+          <col style="width: {{ '%.2f' % width }}pt;">
+          {% endfor %}
+        </colgroup>
+        {% elif table.dep_width %}
+        {% set num_width = (total_width - table.dep_width) / (num_cols if num_cols else 1) %}
+        <colgroup>
+          <col style="width: {{ '%.2f' % table.dep_width }}pt;">
+          {% for _ in range(num_cols) %}
+          <col style="width: {{ '%.2f' % num_width }}pt;">
+          {% endfor %}
+        </colgroup>
+        {% endif %}
+        {% if show_header %}
+        <thead>
+          {% if flat %}
+          <tr>
+            <th class="col-label">{{ dep_header }}</th>
+            {% for header in flat %}
+            <th class="col-num">{{ header }}</th>
+            {% endfor %}
+          </tr>
+          {% else %}
+          <tr>
+            <th class="col-label" rowspan="2">{{ dep_header }}</th>
+            {% for g in table.groups %}
+            <th class="col-num" colspan="{{ g.months | length }}">{{ g.title }}</th>
+            {% endfor %}
+          </tr>
+          <tr>
+            {% for g in table.groups %}
+              {% for month in g.months %}
+              <th class="col-num">{{ month }}</th>
+              {% endfor %}
+            {% endfor %}
+          </tr>
+          {% endif %}
+        </thead>
+        {% endif %}
+        <tbody>
+          {% for row in table.rows %}
+          <tr>
+            <td class="col-label">{% if row.emphasised %}<strong>{{ row.dep }}</strong>{% else %}{{ row.dep }}{% endif %}</td>
+            {% for val in row.vals %}
+            <td>{% if row.emphasised %}<strong>{{ val }}</strong>{% else %}{{ val }}{% endif %}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if table.caption %}
+    <div class="table-caption">{{ table.caption }}</div>
+    {% endif %}
+  {% endmacro %}
+
+  {# ── Fixed chrome: position:fixed repeats it on every page ──────────── #}
+  {% set first_page = pages[0] if pages else {} %}
+  {% if first_page.header_complete_path %}
+  <img class="header-complete" src="{{ first_page.header_complete_path }}" alt="{{ labels.header_image_alt }}" />
+  {% endif %}
+
+  {% set fp = first_page %}
+  {% if fp.footer_site or fp.footer_phone or fp.footer_address or fp.footer_email or fp.footer_city %}
+  <div class="footer-contact">
+    {% if fp.footer_site or fp.footer_phone %}
+    <div class="footer-line-primary">{% if fp.footer_site %}<span class="footer-site">{{ fp.footer_site }}</span>{% endif %}{% if fp.footer_site and fp.footer_phone %} <span class="footer-separator">|</span> {% endif %}{% if fp.footer_phone %}{{ labels.phone }} {{ fp.footer_phone }}{% endif %}</div>
+    {% endif %}
+    {% if fp.footer_address or fp.footer_email %}
+    <div class="footer-line-secondary">{{ fp.footer_address or '' }}{% if fp.footer_address and fp.footer_email %} | {% endif %}{{ fp.footer_email or '' }}</div>
+    {% endif %}
+    {% if fp.footer_city %}
+    <div class="footer-line-secondary">{{ fp.footer_city }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── Flowing content: WeasyPrint paginates it ─────────────────────── #}
+  {% for page in pages %}
+
+    {% if page.show_header_titles %}
+    <div class="header-title" style="text-align: {{ page.header_title_align | default('left') }};">{{ page.title_line1 }}</div>
+    <div class="header-subtitle" style="text-align: {{ page.header_subtitle_align | default('left') }};">{{ page.title_line2 }}</div>
+    {% endif %}
+
+    {% if page.intro %}
+    <div class="intro">{{ page.intro }}</div>
+    {% endif %}
+
+    <div class="content">
+      {% for block in page.blocks %}
+      <div class="content-block">
+        {% if block.type == "html" %}
+          {# Footnotes sit inline next to their <sup> markers (passes.inject_inline_footnotes);
+             CSS float:footnote places them at the bottom of the page. #}
+          {{ block.html | safe }}
+        {% elif block.type == "table" %}
+          {{ render_table(block.table) }}
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {# Footnotes whose marker was never found degrade to a block after the content. #}
+    {% set leftover = namespace(refs=[]) %}
+    {% for block in page.blocks %}{% for ref in (block.refs or []) %}{% set leftover.refs = leftover.refs + [ref] %}{% endfor %}{% endfor %}
+    {% if leftover.refs or page.footer_notes %}
+    <div class="footer-meta">
+      {% if leftover.refs %}
+      <div class="refs">
+        <div class="refs-line"></div>
+        {% for ref in leftover.refs %}
+        <div class="refs-text">{{ ref }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if page.footer_notes %}
+      <div class="footer-notes">
+        {% for note in page.footer_notes %}
+        <div>{{ note }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Page numbers come from CSS Paged Media (counter(page) in an
+       @page @bottom-right margin box), never from a flowed div. #}
+
+  {% endfor %}
+</body>
+</html>
