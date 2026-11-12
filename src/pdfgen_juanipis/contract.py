@@ -166,6 +166,17 @@ _BUILTIN_DIRECTIVES: Tuple[RenderDirective, ...] = (
         values=("", "true"),
     ),
     RenderDirective(
+        key="data-color",
+        kind="attribute",
+        applies_to="<mark>",
+        semantics="Highlight colour of a marked run (what a rich-text editor "
+                  "writes for a highlight; the colour also travels as an "
+                  "inline `background-color`).",
+        pdf="the mark's inline `background-color` (report.css draws <mark>)",
+        docx="run shading `w:shd w:fill` with the same colour",
+        emitted=False,
+    ),
+    RenderDirective(
         key="footnote",
         kind="class",
         applies_to="<p>",

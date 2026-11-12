@@ -2,7 +2,31 @@
 
 ## Unreleased
 
-- _TBD_
+What a rich-text editor writes now reaches the Word file, not only the PDF
+(measured against TipTap and documents pasted from Word, Google Docs and
+the web).
+
+### Fixed
+- Word: inline formatting is walked recursively and accumulated. Italics
+  inside bold, bold inside a coloured `<span>` (how Google Docs pastes),
+  `<u>`, `<s>`, `<sub>`, `<code>`, inline `font-weight` / `font-style` /
+  `text-decoration`, `color` and `background-color` survive; before, one
+  level was read and its content flattened.
+- Word: `<mark>` (and its `data-color`) becomes run shading in the exact
+  colour; `<a href>` with http(s)/mailto becomes a real Word hyperlink.
+- Word: list items keep their formatting, nested lists go one level deeper
+  (`List Bullet 2`…), and every numbered list starts again at 1 (two lists
+  read 1-2 and 3-4).
+- Word: `<blockquote>` is indented and in italics; `<pre>` is monospaced;
+  `<h5>`/`<h6>` are headings; unknown blocks keep their inline formatting.
+- Word: JPEG, GIF and WEBP images are embedded (re-encoded as PNG); an
+  image declaring more than 16 Mpx is not decoded, a large one is scaled to
+  2400 px. A bare `<img>` prints at its own size up to the text width.
+- PDF: a one-column table prints its rows as paragraphs and a one-cell row
+  inside a grid keeps its label; both vanished without a warning.
+
+### Added
+- Contract directive `data-color` on `<mark>`.
 
 ## 0.2.1 - 2026-11-08
 
