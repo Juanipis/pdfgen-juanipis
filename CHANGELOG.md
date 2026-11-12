@@ -6,6 +6,10 @@ What a rich-text editor writes now reaches the Word file, not only the PDF
 (measured against TipTap and documents pasted from Word, Google Docs and
 the web).
 
+## 0.2.2 - 2026-11-12
+
+- Automated release.
+
 ### Fixed
 - Word: inline formatting is walked recursively and accumulated. Italics
   inside bold, bold inside a coloured `<span>` (how Google Docs pastes),
