@@ -336,6 +336,13 @@ class HtmlParser:
             table = self.table_block(element)
             if table:
                 content.append(table)
+            else:
+                # Not a grid (one column, or no rows a grid can hold): its
+                # text still prints, one paragraph per row, never dropped.
+                for tr in element.xpath(".//tr"):
+                    text = " ".join(tr.text_content().split())
+                    if text:
+                        content.append({"type": "html", "html": f"<p>{escape(text, quote=False)}</p>"})
             return
 
         if tag == "p":
@@ -437,11 +444,19 @@ class HtmlParser:
                 first_header = flat[0] or first_header
                 headers = [h or f"C{i + 1}" for i, h in enumerate(flat[1:])]
 
+        # A grid needs a label column and at least one value column. A table
+        # of ONE column (a list someone pasted as a table) has none: it is
+        # not a grid, and the caller prints its rows as paragraphs. Until
+        # 0.2.1 it returned nothing and the table vanished from the PDF.
+        if all(len(tr.xpath("./th|./td")) < 2 for tr in rows):
+            return None
         body_rows: List[Dict[str, Any]] = []
         for tr in rows:
             cells = tr.xpath("./th|./td")
-            if len(cells) < 2:
+            if not cells:
                 continue
+            # A one-cell row inside a grid (a group label spanning the
+            # columns) keeps its label with empty values; it was dropped.
             label = " ".join(cells[0].text_content().split())
             vals = [" ".join(cell.text_content().split()) for cell in cells[1:]]
             # Emphasis survives the flattening: a row set in bold in the

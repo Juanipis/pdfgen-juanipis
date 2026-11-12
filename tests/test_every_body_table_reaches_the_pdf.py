@@ -77,3 +77,32 @@ def test_a_loose_caption_div_with_no_table_is_still_printed():
 def test_the_parser_never_removes_a_node_it_did_not_create():
     source = inspect.getsource(parsing.HtmlParser.table_block)
     assert ".remove(" not in source and "CONSUMED_ATTR" in source
+
+
+# ── a table that is not a grid still prints (0.2.2) ──────────────────────
+
+def _texts(blocks):
+    return " ".join(
+        block.get("html", "") if block.get("type") == "html" else str(block)
+        for block in blocks
+    )
+
+
+def test_a_one_column_table_prints_its_rows_as_paragraphs():
+    """A list pasted as a one-column table returned no block at all, and
+    the table vanished from the PDF without a word (ABACO editor, 2026-11-12)."""
+    blocks = _blocks("<p>Antes.</p><table><tr><th>Lista</th></tr><tr><td>UNO</td></tr>"
+                     "<tr><td>DOS</td></tr></table><p>Después.</p>")
+    assert not [b for b in blocks if b.get("type") == "table"]
+    text = _texts(blocks)
+    for word in ("Lista", "UNO", "DOS", "Antes.", "Después."):
+        assert word in text, (word, text)
+
+
+def test_a_one_cell_row_inside_a_grid_keeps_its_label():
+    """A group label spanning the columns was dropped from the grid."""
+    blocks = _blocks('<table class="body-table"><thead><tr><th>A</th><th>B</th></tr></thead><tbody>'
+                     '<tr><td colspan="2">GRUPO</td></tr><tr><td>x</td><td>1</td></tr></tbody></table>')
+    table = next(b for b in blocks if b.get("type") == "table")["table"]
+    labels = [row["dep"] for row in table["rows"]] if "rows" in table else str(table)
+    assert "GRUPO" in str(labels)

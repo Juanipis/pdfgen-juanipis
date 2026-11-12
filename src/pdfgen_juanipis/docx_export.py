@@ -27,6 +27,7 @@ import contextvars
 import copy
 import io
 import logging
+import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -616,8 +617,8 @@ def _emit_element_body(
 ) -> None:
     tag = (elem.tag or "").lower()
 
-    if tag in ("h1", "h2", "h3", "h4"):
-        level = int(tag[1])
+    if tag in ("h1", "h2", "h3", "h4", "h5", "h6"):
+        level = min(int(tag[1]), 4)
         text = _flatten_text(elem)
         if not text:
             return
@@ -661,12 +662,22 @@ def _emit_element_body(
         return
 
     if tag in ("ul", "ol"):
-        for li in elem.findall("li"):
-            para = doc.add_paragraph(
-                _flatten_text(li),
-                style="List Bullet" if tag == "ul" else "List Number",
-            )
-            para.alignment = _ALIGNMENTS[options.text_align]
+        _emit_list(doc, elem, footnote_map=footnote_map, options=options)
+        return
+
+    if tag == "blockquote":
+        _emit_blockquote(doc, elem, footnote_map=footnote_map, options=options)
+        return
+
+    if tag == "pre":
+        para = doc.add_paragraph()
+        lines = "".join(elem.itertext()).strip("\n").split("\n")
+        for i, line in enumerate(lines):
+            run = para.add_run(line)
+            run.font.name = _CODE_FONT
+            run.font.size = _FOOTNOTE_FONT_SIZE
+            if i < len(lines) - 1:
+                run.add_break()
         return
 
     if tag == "table":
@@ -702,11 +713,126 @@ def _emit_element_body(
             state.depth -= 1
         return
 
-    # Fallback: anything else with text becomes a plain paragraph.
-    text = _flatten_text(elem)
-    if text:
-        para = doc.add_paragraph(text)
+    # Fallback: anything else with text becomes a paragraph, its inline
+    # formatting kept.
+    if _flatten_text(elem):
+        para = doc.add_paragraph()
         para.alignment = _ALIGNMENTS[options.text_align]
+        _emit_inline(para, elem, footnote_map=footnote_map)
+
+
+def _list_item_inline(li: Any) -> Any:
+    """The inline content of a ``<li>``, without its nested lists.
+
+    A rich-text editor writes ``<li><p>text</p></li>``: each ``<p>`` is
+    unwrapped, separated from the next by a line break.
+    """
+    holder = etree.Element("span")
+    holder.text = li.text
+
+    def _append_text(text: Optional[str]) -> None:
+        if not text:
+            return
+        if len(holder):
+            holder[-1].tail = (holder[-1].tail or "") + text
+        else:
+            holder.text = (holder.text or "") + text
+
+    for child in li:
+        ctag = child.tag.lower() if isinstance(getattr(child, "tag", None), str) else ""
+        if ctag in ("ul", "ol"):
+            continue
+        if ctag == "p":
+            if len(holder) or (holder.text or "").strip():
+                holder.append(etree.Element("br"))
+            inner = copy.deepcopy(child)
+            _append_text(inner.text)
+            for grandchild in inner:
+                holder.append(grandchild)
+            continue
+        clone = copy.deepcopy(child)
+        clone.tail = None
+        holder.append(clone)
+        _append_text(child.tail)
+    return holder
+
+
+def _restarted_numbering(doc: Document, style_name: str) -> Optional[int]:
+    """A new ``w:num`` for the numbered-list style that starts again at 1.
+
+    Every ``List Number`` paragraph of a document shares one numbering, so
+    two numbered lists came out as 1-2 and 3-4 in Word. Each list gets its
+    own instance of the style's abstract numbering with a start override.
+    ``None`` when the style carries no numbering (a template without it):
+    the paragraphs then keep the style's own.
+    """
+    try:
+        style = doc.styles[style_name]
+        num_pr = style.element.pPr.numPr if style.element.pPr is not None else None
+        if num_pr is None or num_pr.numId is None:
+            return None
+        numbering = doc.part.numbering_part.numbering_definitions._numbering
+        base_num = numbering.num_having_numId(num_pr.numId.val)
+        num = numbering.add_num(base_num.abstractNumId.val)
+        num.add_lvlOverride(ilvl=0).add_startOverride(1)
+        return num.numId
+    except Exception:  # noqa: BLE001 — the style's own numbering still applies
+        return None
+
+
+def _set_num_id(paragraph: Any, num_id: int) -> None:
+    num_pr = paragraph._p.get_or_add_pPr().get_or_add_numPr()
+    num_pr.get_or_add_ilvl().val = 0
+    num_pr.get_or_add_numId().val = num_id
+
+
+def _emit_list(
+    doc: Document,
+    elem: Any,
+    *,
+    footnote_map: Dict[str, List[int]],
+    options: RenderOptions,
+    level: int = 1,
+) -> None:
+    """A ``<ul>``/``<ol>`` as Word list paragraphs.
+
+    Each item keeps its inline formatting (it was flattened to plain text),
+    nested lists go one level deeper (``List Bullet 2``…), and each
+    numbered list starts at 1.
+    """
+    ordered = (elem.tag or "").lower() == "ol"
+    base = "List Number" if ordered else "List Bullet"
+    style_name = base if level == 1 else f"{base} {min(level, 3)}"
+    if style_name not in [s.name for s in doc.styles]:
+        style_name = base
+    num_id = _restarted_numbering(doc, style_name) if ordered else None
+    for li in elem.findall("li"):
+        para = doc.add_paragraph(style=style_name)
+        para.alignment = _ALIGNMENTS[options.text_align]
+        if num_id is not None:
+            _set_num_id(para, num_id)
+        _emit_inline(para, _list_item_inline(li), footnote_map=footnote_map)
+        for nested in li:
+            if isinstance(getattr(nested, "tag", None), str) and nested.tag.lower() in ("ul", "ol"):
+                _emit_list(doc, nested, footnote_map=footnote_map, options=options, level=level + 1)
+
+
+def _emit_blockquote(
+    doc: Document,
+    elem: Any,
+    *,
+    footnote_map: Dict[str, List[int]],
+    options: RenderOptions,
+) -> None:
+    """A ``<blockquote>``: its paragraphs indented and in italics, as the
+    PDF sets it apart. It fell into the plain-text fallback before."""
+    blocks = [c for c in elem if isinstance(getattr(c, "tag", None), str) and c.tag.lower() == "p"]
+    for block in blocks or [elem]:
+        para = doc.add_paragraph()
+        para.paragraph_format.left_indent = Inches(0.4)
+        para.paragraph_format.right_indent = Inches(0.4)
+        para.alignment = _ALIGNMENTS[inline_text_align(block) or options.text_align]
+        _emit_inline(para, block, footnote_map=footnote_map, run_style=_RunStyle(italic=True))
 
 
 def _emit_paragraph(
@@ -850,6 +976,127 @@ _SPAN_RUN_STYLES: Dict[str, _RunStyle] = {
 _SPAN_BOLD_CLASSES = frozenset({"figure-title"})
 
 
+@dataclass(frozen=True)
+class _Fmt:
+    """The character formatting accumulated while walking into nested inline
+    elements: ``<strong><em>x</em></strong>`` is bold AND italic."""
+
+    bold: bool = False
+    italic: bool = False
+    underline: bool = False
+    strike: bool = False
+    sup: bool = False
+    sub: bool = False
+    code: bool = False
+    color: Optional[RGBColor] = None
+    #: Run shading as a hex fill (``"F8E08E"``): a ``<mark>`` or a
+    #: ``background-color``. Shading keeps the exact colour; Word's
+    #: highlight palette has sixteen.
+    shade: Optional[str] = None
+    style: Optional[_RunStyle] = None
+
+
+_CODE_FONT = "Courier New"
+_LINK_COLOR = RGBColor(0x05, 0x63, 0xC1)
+#: The colour of a ``<mark>`` that names none (browsers paint it yellow).
+_DEFAULT_MARK_FILL = "FFFF00"
+_SAFE_LINK_RE = re.compile(r"^(https?://|mailto:)", re.IGNORECASE)
+_HEX_RE = re.compile(r"^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+_RGB_RE = re.compile(r"^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([\d.]+))?\s*\)$")
+_WS_RE = re.compile(r"[ \t\r\n\f]+")
+
+
+def _css_hex(value: Optional[str]) -> Optional[str]:
+    """``#c00000`` / ``#c00`` / ``rgb(192, 0, 0)`` → ``"C00000"``; anything
+    else (a name, ``inherit``, a transparent ``rgba``) → ``None``."""
+    value = (value or "").strip()
+    match = _HEX_RE.match(value)
+    if match:
+        digits = match.group(1)
+        if len(digits) == 3:
+            digits = "".join(c * 2 for c in digits)
+        return digits.upper()
+    match = _RGB_RE.match(value)
+    if match:
+        if match.group(4) is not None and float(match.group(4)) == 0:
+            return None
+        return "".join(f"{min(255, int(c)):02X}" for c in match.groups()[:3])
+    return None
+
+
+def _style_props(elem: Any) -> Dict[str, str]:
+    props: Dict[str, str] = {}
+    for decl in str(elem.get("style") or "").split(";"):
+        name, sep, value = decl.partition(":")
+        if sep:
+            props[name.strip().lower()] = value.strip()
+    return props
+
+
+def _child_fmt(child: Any, fmt: _Fmt) -> _Fmt:
+    """``fmt`` plus what ``child`` adds: its tag, its contract classes and
+    the formatting parts of its inline ``style``."""
+    from dataclasses import replace as _replace
+
+    tag = (child.tag or "").lower()
+    props = _style_props(child)
+    changes: Dict[str, Any] = {}
+    weight = props.get("font-weight", "").lower()
+    if tag in ("strong", "b") and weight != "normal":
+        changes["bold"] = True
+    if weight in ("bold", "bolder") or (weight.isdigit() and int(weight) >= 600):
+        changes["bold"] = True
+    if tag in ("em", "i", "cite", "dfn", "var") or props.get("font-style", "").lower() == "italic":
+        changes["italic"] = True
+    decoration = " ".join(v for k, v in props.items() if k.startswith("text-decoration")).lower()
+    if tag in ("u", "ins") or "underline" in decoration:
+        changes["underline"] = True
+    if tag in ("s", "strike", "del") or "line-through" in decoration:
+        changes["strike"] = True
+    if tag == "sub":
+        changes["sub"] = True
+    if tag == "sup":
+        changes["sup"] = True
+    if tag in ("code", "kbd", "samp", "tt"):
+        changes["code"] = True
+    color = _css_hex(props.get("color")) or (_css_hex(child.get("color")) if tag == "font" else None)
+    if color:
+        changes["color"] = RGBColor.from_string(color)
+    shade = _css_hex(props.get("background-color") or props.get("background"))
+    if tag == "mark":
+        shade = shade or _css_hex(child.get("data-color")) or _DEFAULT_MARK_FILL
+    if shade:
+        changes["shade"] = shade
+    if tag == "span":
+        classes = element_classes(child)
+        span_style = next((_SPAN_RUN_STYLES[c] for c in classes if c in _SPAN_RUN_STYLES), None)
+        if span_style is not None:
+            changes["style"] = span_style
+        if any(c in _SPAN_BOLD_CLASSES for c in classes):
+            changes["bold"] = True
+    return _replace(fmt, **changes) if changes else fmt
+
+
+def _add_hyperlink(paragraph: Any, url: str) -> Any:
+    """An empty ``w:hyperlink`` to ``url`` at the end of ``paragraph``; runs
+    are moved into it as the walk produces them."""
+    rel_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+    link = OxmlElement("w:hyperlink")
+    link.set(qn("r:id"), rel_id)
+    link.set(qn("w:history"), "1")
+    paragraph._p.append(link)
+    return link
+
+
+def _shade_run(run: Any, fill: str) -> None:
+    r_pr = run._r.get_or_add_rPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), fill)
+    r_pr.append(shd)
+
+
 def _emit_inline(
     paragraph: Any,
     elem: Any,
@@ -858,88 +1105,100 @@ def _emit_inline(
     footnote_map: Optional[Dict[str, List[int]]] = None,
     run_style: Optional[_RunStyle] = None,
 ) -> None:
-    """Walk ``elem`` adding runs to ``paragraph``.
+    """Walk ``elem`` adding runs to ``paragraph``, formatting accumulated.
+
+    The walk is recursive: an inline element inside another adds its own
+    formatting to its parent's, so ``<strong><em>x</em></strong>``, a bold
+    word inside a coloured ``<span>`` (how Google Docs pastes) or a link
+    inside a highlight all survive. Until 0.2.1 only one level was read and
+    its content flattened: italics inside bold, bold inside a span and every
+    underline, colour, highlight and link of an edited document vanished
+    from the Word file while the PDF kept them.
 
     Honours:
-      - ``<sup>`` → superscript run (or a native footnote reference).
-      - ``<strong>`` / ``<b>`` → bold.
-      - ``<em>`` / ``<i>`` → italic.
+      - ``<sup>`` → a native footnote reference when the marker has a
+        footnote, a superscript run otherwise.
+      - ``<strong>``/``<b>``, ``<em>``/``<i>``, ``<u>``/``<ins>``,
+        ``<s>``/``<del>``, ``<sub>``, ``<code>``/``<kbd>`` → the run's
+        formatting; the same from an inline ``style`` (font-weight,
+        font-style, text-decoration).
+      - ``color`` / ``background-color`` and ``<mark>`` (``data-color``)
+        → font colour and run shading.
+      - ``<a href>`` with http(s)/mailto → a real Word hyperlink.
       - ``<br>`` → manual line break.
       - ``<span class="figure-title|figure-subcaption">`` → the contract's
         caption run styles (see :data:`_SPAN_RUN_STYLES`).
-      - bare text → plain run.
+      - any other element → walked, never flattened.
     """
     base = run_style or (_FOOTNOTE_RUN if footnote else _BODY_RUN)
+    footnote_map = footnote_map or {}
+    started = [bool(paragraph.runs)]
 
-    def _run(
-        text: str,
-        *,
-        sup: bool = False,
-        bold: bool = False,
-        italic: bool = False,
-        style: Optional[_RunStyle] = None,
-    ) -> None:
+    def _run(text: str, fmt: _Fmt, link: Any) -> None:
+        # HTML whitespace: runs of it are one space, and none at the start
+        # of the paragraph (the browser and the PDF print none there).
+        text = _WS_RE.sub(" ", text or "")
+        if not started[0]:
+            text = text.lstrip(" ")
         if not text:
             return
-        active = style or base
+        started[0] = True
+        active = fmt.style or base
         r = paragraph.add_run(text)
-        r.font.name = _ctx().font
+        r.font.name = _CODE_FONT if fmt.code else _ctx().font
         r.font.size = active.size
-        if active.color is not None:
-            r.font.color.rgb = active.color
-        if sup:
+        color = fmt.color or (_LINK_COLOR if link is not None else None) or active.color
+        if color is not None:
+            r.font.color.rgb = color
+        if fmt.sup:
             r.font.superscript = True
-        if bold:
+        if fmt.sub:
+            r.font.subscript = True
+        if fmt.bold:
             r.bold = True
-        if italic or active.italic:
+        if fmt.italic or active.italic:
             r.italic = True
+        if fmt.underline or link is not None:
+            r.underline = True
+        if fmt.strike:
+            r.font.strike = True
+        if fmt.shade:
+            _shade_run(r, fmt.shade)
+        if link is not None:
+            link.append(r._r)
 
-    footnote_map = footnote_map or {}
+    def _walk(node: Any, fmt: _Fmt, link: Any) -> None:
+        if node.text:
+            _run(node.text, fmt, link)
+        for child in node:
+            ctag = child.tag.lower() if isinstance(getattr(child, "tag", None), str) else ""
+            if not ctag:
+                pass  # a comment: only its tail is text
+            elif ctag == "sup" and not fmt.sup:
+                # One Word reference PER number the marker carries: a word
+                # citing notes 2, 3 and 4 has to produce three, or two of
+                # them vanish from the document. The leading <sup> of a
+                # footnote paragraph is its own marker, not a reference.
+                emitted = False
+                for marker in _markers_of(child):
+                    fn_ids = footnote_map.get(marker)
+                    if fn_ids and not footnote:
+                        _add_footnote_reference(paragraph, fn_ids.pop(0))
+                        emitted = True
+                if not emitted:
+                    _walk(child, _child_fmt(child, fmt), link)
+            elif ctag == "br":
+                paragraph.add_run().add_break()
+            elif ctag == "a":
+                href = str(child.get("href") or "").strip()
+                inner_link = _add_hyperlink(paragraph, href) if link is None and _SAFE_LINK_RE.match(href) else link
+                _walk(child, _child_fmt(child, fmt), inner_link)
+            else:
+                _walk(child, _child_fmt(child, fmt), link)
+            if child.tail:
+                _run(child.tail, fmt, link)
 
-    # leading text before any child
-    if elem.text:
-        _run(elem.text)
-
-    for child in elem:
-        ctag = (child.tag or "").lower()
-        if ctag == "sup":
-            markers = _markers_of(child)
-            # One Word reference PER number the marker carries: a word
-            # citing notes 2, 3 and 4 has to produce three, or two of
-            # them vanish from the document.
-            emitted = False
-            for marker in markers:
-                fn_ids = footnote_map.get(marker)
-                # Skip the very first leading <sup> on a footnote
-                # paragraph (it's the source marker, not a reference).
-                if fn_ids and not footnote:
-                    _add_footnote_reference(paragraph, fn_ids.pop(0))
-                    emitted = True
-            if not emitted:
-                _run(_flatten_text(child), sup=True)
-        elif ctag in ("strong", "b"):
-            _run(_inline_text(child), bold=True)
-        elif ctag in ("em", "i"):
-            _run(_inline_text(child), italic=True)
-        elif ctag == "br":
-            paragraph.add_run().add_break()
-        elif ctag == "span":
-            classes = element_classes(child)
-            span_style = next(
-                (_SPAN_RUN_STYLES[c] for c in classes if c in _SPAN_RUN_STYLES),
-                None,
-            )
-            _run(
-                _inline_text(child),
-                bold=any(c in _SPAN_BOLD_CLASSES for c in classes),
-                style=span_style,
-            )
-        else:
-            # Unknown inline element — fall back to plain text
-            _run(_inline_text(child))
-        # tail text that follows the child
-        if child.tail:
-            _run(child.tail)
+    _walk(elem, _Fmt(), None)
 
 
 def _emit_figure(doc: Document, elem: Any, result: DocxRenderResult) -> None:
@@ -956,6 +1215,7 @@ def _emit_figure(doc: Document, elem: Any, result: DocxRenderResult) -> None:
         return
     src = img.get("src") or ""
     png_bytes: Optional[bytes] = None
+    raster = _RASTER_SRC_RE.match(src)
     if src.startswith("data:image/png;base64,"):
         try:
             png_bytes = base64.b64decode(src.split(",", 1)[1])
@@ -963,8 +1223,13 @@ def _emit_figure(doc: Document, elem: Any, result: DocxRenderResult) -> None:
             result.warnings.append(f"figure png decode failed: {exc}")
             result.images_skipped += 1
             return
+    elif raster:
+        png_bytes = _raster_to_png(src.split(",", 1)[1], result)
+        if png_bytes is None:
+            result.images_skipped += 1
+            return
     elif not src.startswith("data:image/svg+xml;base64,"):
-        result.warnings.append("figure has non-SVG/PNG src; skipped")
+        result.warnings.append("figure has a src that is not an embedded image; skipped")
         result.images_skipped += 1
         return
 
@@ -997,7 +1262,13 @@ def _emit_figure(doc: Document, elem: Any, result: DocxRenderResult) -> None:
     # keep-together block (`page-break-inside: avoid` on .content figure).
     p.paragraph_format.keep_with_next = True
     run = p.add_run()
-    run.add_picture(io.BytesIO(png_bytes), width=Inches(_figure_width_inches(elem)))
+    width = _figure_width_inches(elem)
+    if (elem.tag or "").lower() == "img":
+        # A bare image (one an editor inserted) prints at its own size, up
+        # to the text width, as in the PDF; a contract figure fills its
+        # column. A 120 px logo came out six inches wide.
+        width = min(width, _natural_width_inches(png_bytes) or width)
+    run.add_picture(io.BytesIO(png_bytes), width=Inches(width))
     result.images_embedded += 1
 
     # Caption (if the figure carries one). Emitted through the inline
@@ -1010,6 +1281,49 @@ def _emit_figure(doc: Document, elem: Any, result: DocxRenderResult) -> None:
         cap = doc.add_paragraph(style=_CAPTION_STYLE)
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         _emit_inline(cap, figcaption, run_style=_CAPTION_RUN)
+
+
+#: Embedded raster formats Word takes once re-encoded as PNG (a photo
+#: uploaded in an editor arrives as JPEG).
+_RASTER_SRC_RE = re.compile(r"^data:image/(jpe?g|gif|webp);base64,", re.IGNORECASE)
+#: An image is decoded only below this many pixels (read from its header
+#: first): the HTML may come from any user of an editor, and a small file
+#: can declare a huge bitmap. Larger images are scaled down to this side.
+_MAX_RASTER_PIXELS = 16_000_000
+_MAX_RASTER_SIDE = 2400
+
+
+def _raster_to_png(payload: str, result: DocxRenderResult) -> Optional[bytes]:
+    """A base64 JPEG/GIF/WEBP payload as PNG bytes, or ``None`` (warned)."""
+    from PIL import Image
+
+    try:
+        with Image.open(io.BytesIO(base64.b64decode(payload))) as image:
+            width, height = image.size  # from the header: nothing decoded yet
+            if width * height > _MAX_RASTER_PIXELS:
+                result.warnings.append(
+                    f"figure image of {width}x{height} px exceeds {_MAX_RASTER_PIXELS} px; skipped")
+                return None
+            image.seek(0)
+            frame = image.convert("RGBA" if image.mode in ("RGBA", "LA", "P") else "RGB")
+            frame.thumbnail((_MAX_RASTER_SIDE, _MAX_RASTER_SIDE))
+            out = io.BytesIO()
+            frame.save(out, format="PNG")
+            return out.getvalue()
+    except Exception as exc:  # noqa: BLE001 — reported, the figure skipped
+        result.warnings.append(f"figure image decode failed: {type(exc).__name__}")
+        return None
+
+
+def _natural_width_inches(png_bytes: bytes) -> Optional[float]:
+    """The picture's width at 96 px per inch (the CSS pixel), or ``None``."""
+    from PIL import Image
+
+    try:
+        with Image.open(io.BytesIO(png_bytes)) as image:
+            return max(0.2, image.size[0] / 96.0)
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _figure_width_inches(elem: Any) -> float:
